@@ -1,0 +1,16 @@
+{{define "content"}}
+<div class="content">
+    <h1 class="title is-1">{{.Game.Name}}</h1>
+    <p>Submissions for <a href="/jams/{{.Jam.URL}}">{{.Jam.Name}}</a></p>
+
+    <p>
+        <a href="{{.Game.Build}}" class="button is-link">Download</a>
+    </p>
+
+    {{.RenderedContent}}
+
+    <a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit" class="button is-link">Edit</a>
+
+</div>
+
+{{end}}
