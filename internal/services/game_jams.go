@@ -2,17 +2,44 @@ package services
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"strings"
 
+	"GameJamPlatform/internal/forms"
 	"GameJamPlatform/internal/gamejam"
-	"GameJamPlatform/internal/storages"
 )
 
-type Service struct {
-	repo storages.Repo
-}
+func (sr *Service) validateJam(ctx context.Context, jam gamejam.GameJam) (forms.ValidationErrors, error) {
+	const maxTitleLength = 64
+	const maxURLLength = 64
+	const maxContentLength = 10000
 
-func NewService(repo storages.Repo) *Service {
-	return &Service{repo: repo}
+	validationErrors := make(forms.ValidationErrors)
+
+	urlFormat := regexp.MustCompile(`^[a-z0-9-]+$`)
+	if !urlFormat.MatchString(jam.URL) {
+		validationErrors["URL"] = "URL must only contain lowercase letters, numbers and dashes"
+	}
+
+	if len(jam.URL) == 0 || len(jam.URL) > maxURLLength {
+		validationErrors["URL"] = fmt.Sprintf("URL length must be less than %d and not empty", maxURLLength)
+	}
+	if len(jam.Title) == 0 || len(jam.Title) > maxTitleLength {
+		validationErrors["Title"] = fmt.Sprintf("Name length must be less than %d and not empty", maxTitleLength)
+	}
+	if len(jam.Content) > maxContentLength {
+		validationErrors["Content"] = fmt.Sprintf("Content length must be less than %d", maxContentLength)
+	}
+
+	// TODO: Validate dates
+
+	prevGameJam, err := sr.repo.GetJamID(ctx, jam.URL)
+	if err == nil && prevGameJam != jam.ID {
+		validationErrors["URL"] = "URL already exists"
+	}
+
+	return validationErrors, nil
 }
 
 func (sr *Service) GetJams(ctx context.Context) ([]gamejam.GameJam, error) {
@@ -20,9 +47,18 @@ func (sr *Service) GetJams(ctx context.Context) ([]gamejam.GameJam, error) {
 	return gameJams, err
 }
 
-func (sr *Service) CreateJam(ctx context.Context, jam gamejam.GameJam) error {
-	err := sr.repo.CreateJam(ctx, jam)
-	return err
+func (sr *Service) CreateJam(ctx context.Context, jam gamejam.GameJam) (forms.ValidationErrors, error) {
+	jam.Title = strings.TrimSpace(jam.Title)
+	validationErrors, err := sr.validateJam(ctx, jam)
+	if err != nil {
+		return nil, err
+	}
+	if len(validationErrors) > 0 {
+		return validationErrors, nil
+	}
+
+	err = sr.repo.CreateJam(ctx, jam)
+	return nil, err
 }
 
 func (sr *Service) DeleteJam(ctx context.Context, jamID int) error {
@@ -45,10 +81,20 @@ func (sr *Service) GetJamByID(ctx context.Context, jamID int) (*gamejam.GameJam,
 	return jam, err
 }
 
-func (sr *Service) UpdateJam(ctx context.Context, jamID int, jam gamejam.GameJam) error {
+func (sr *Service) UpdateJam(ctx context.Context, jamID int, jam gamejam.GameJam) (forms.ValidationErrors, error) {
+	jam.Title = strings.TrimSpace(jam.Title)
 	jam.ID = jamID
-	err := sr.repo.UpdateJam(ctx, jam)
-	return err
+
+	validationErrors, err := sr.validateJam(ctx, jam)
+	if err != nil {
+		return nil, err
+	}
+	if len(validationErrors) > 0 {
+		return validationErrors, nil
+	}
+
+	err = sr.repo.UpdateJam(ctx, jam)
+	return nil, err
 }
 
 func (sr *Service) JamEntries(ctx context.Context, jamURL string) ([]gamejam.Game, error) {

@@ -5,7 +5,7 @@ import "time"
 type GameJam struct {
 	ID int
 
-	Name    string
+	Title   string
 	URL     string
 	Content string
 
@@ -23,7 +23,7 @@ type Game struct {
 	ID        int
 	GameJamID int
 
-	Name    string
+	Title   string
 	URL     string
 	Content string
 	Build   string

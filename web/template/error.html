@@ -1,5 +1,6 @@
 {{define "content"}}
-<h1 class="title">
-    Error
-</h1>
+<div class="content">
+    <h1 class="title"> {{.ErrorMessage}} </h1>
+    <p> {{.DebugErrorMessage}}</p>
+</div>
 {{end}}

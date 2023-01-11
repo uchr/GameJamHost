@@ -38,22 +38,22 @@ func (s *server) Run() error {
 	r.Route("/", func(r chi.Router) {
 		r.Get("/jams", s.jamsListHandler())
 		r.Get("/jam/new", s.jamNewHandler())
-		r.Post("/jam/create", s.jamCreateHandler())
+		r.Post("/jam/new", s.jamCreateHandler())
 
 		r.Get("/jams/{jamURL}", s.jamOverviewHandler())
 		r.Get("/jams/{jamURL}/entries", s.jamEntriesHandler())
 
 		r.Get("/jams/{jamID}/edit", s.jamEditHandler())
 		r.Get("/jams/{jamID}/delete", s.jamDeleteHandler())
-		r.Post("/jams/{jamID}/update", s.jamUpdateHandler())
+		r.Post("/jams/{jamID}/edit", s.jamUpdateHandler())
 
 		r.Get("/jams/{jamURL}/game/new", s.gameNewHandler())
-		r.Post("/jams/{jamURL}/game/create", s.gameCreateHandler())
+		r.Post("/jams/{jamURL}/game/new", s.gameCreateHandler())
 
 		r.Get("/jams/{jamURL}/games/{gameURL}", s.gameOverviewHandler())
 		r.Get("/jams/{jamURL}/games/{gameURL}/edit", s.gameEditHandler())
 		r.Get("/jams/{jamURL}/games/{gameURL}/ban", s.gameBanHandler())
-		r.Post("/jams/{jamURL}/games/{gameURL}/update", s.gameUpdateHandler())
+		r.Post("/jams/{jamURL}/games/{gameURL}/edit", s.gameUpdateHandler())
 
 		//r.Get("/jams/{jamURL}/results", s.jamResultsHandler())
 

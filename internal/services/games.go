@@ -3,17 +3,39 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"regexp"
 	"strings"
 	"time"
 
+	"GameJamPlatform/internal/forms"
 	"GameJamPlatform/internal/gamejam"
 	"GameJamPlatform/internal/storages"
 )
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
+}
+
+func (sr *Service) validateGame(game gamejam.Game) forms.ValidationErrors {
+	const maxTitleLength = 64
+	const maxBuildLength = 1000
+	const maxContentLength = 10000
+
+	validationErrors := make(forms.ValidationErrors)
+
+	if len(game.Title) == 0 || len(game.Title) > maxTitleLength {
+		validationErrors["Title"] = fmt.Sprintf("Title must be less than %d characters and not empty", maxTitleLength)
+	}
+	if len(game.Build) == 0 || len(game.Build) > maxBuildLength {
+		validationErrors["Build"] = fmt.Sprintf("Build must be less than %d characters and not empty", maxBuildLength)
+	}
+	if len(game.Content) > maxContentLength {
+		validationErrors["Content"] = fmt.Sprintf("Content must be less than %d characters and not empty", maxContentLength)
+	}
+
+	return validationErrors
 }
 
 func generateRandomString(n int) (string, error) {
@@ -63,39 +85,49 @@ func (sr *Service) generateGameUrl(ctx context.Context, jamID int, gameName stri
 }
 
 // CreateGame creates a new game in the database and returns the game's URL.
-func (sr *Service) CreateGame(ctx context.Context, jamURL string, game gamejam.Game) (string, error) {
+func (sr *Service) CreateGame(ctx context.Context, jamURL string, game gamejam.Game) (string, forms.ValidationErrors, error) {
+	validationErrors := sr.validateGame(game)
+	if len(validationErrors) > 0 {
+		return "", validationErrors, nil
+	}
+
 	jamID, err := sr.repo.GetJamID(ctx, jamURL)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	game.GameJamID = jamID
-	game.URL, err = sr.generateGameUrl(ctx, jamID, game.Name)
+	game.URL, err = sr.generateGameUrl(ctx, jamID, game.Title)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	err = sr.repo.CreateGame(ctx, game)
-	return game.URL, err
+	return game.URL, nil, err
 }
 
-func (sr *Service) UpdateGame(ctx context.Context, jamURL string, gameURL string, game gamejam.Game) error {
+func (sr *Service) UpdateGame(ctx context.Context, jamURL string, gameURL string, game gamejam.Game) (forms.ValidationErrors, error) {
+	validationErrors := sr.validateGame(game)
+	if len(validationErrors) > 0 {
+		return validationErrors, nil
+	}
+
 	jamID, err := sr.repo.GetJamID(ctx, jamURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	prevGame, err := sr.repo.GetGame(ctx, jamID, gameURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	prevGame.Name = game.Name
+	prevGame.Title = game.Title
 	prevGame.Content = game.Content
 	prevGame.Build = game.Build
 
 	err = sr.repo.UpdateGame(ctx, *prevGame)
-	return err
+	return nil, err
 }
 
 func (sr *Service) BanGame(ctx context.Context, jamURL string, gameURL string) error {

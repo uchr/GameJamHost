@@ -2,18 +2,14 @@ package templates
 
 import "html/template"
 
-const TimeLayout = "2006-01-02T15:04"
-
 type Templates struct {
 	JamListTemplate     *template.Template
-	JamNewTemplate      *template.Template
 	JamOverviewTemplate *template.Template
-	JamEditTemplate     *template.Template
+	JamEditFormTemplate *template.Template
 	JamEntriesTemplate  *template.Template
 
-	GameNewTemplate      *template.Template
 	GameOverviewTemplate *template.Template
-	GameEditTemplate     *template.Template
+	GameEditFormTemplate *template.Template
 
 	ErrorTemplate *template.Template
 }
@@ -27,17 +23,12 @@ func NewTemplates(templateFolder string) (Templates, error) {
 		return templates, err
 	}
 
-	templates.JamNewTemplate, err = template.ParseFiles(templateFolder+"/jam_new.html", templateFolder+"/base.html")
-	if err != nil {
-		return templates, err
-	}
-
 	templates.JamOverviewTemplate, err = template.ParseFiles(templateFolder+"/jam_overview.html", templateFolder+"/base.html")
 	if err != nil {
 		return templates, err
 	}
 
-	templates.JamEditTemplate, err = template.ParseFiles(templateFolder+"/jam_edit.html", templateFolder+"/base.html")
+	templates.JamEditFormTemplate, err = template.ParseFiles(templateFolder+"/jam_edit_form.html", templateFolder+"/base.html")
 	if err != nil {
 		return templates, err
 	}
@@ -47,12 +38,7 @@ func NewTemplates(templateFolder string) (Templates, error) {
 		return templates, err
 	}
 
-	templates.GameNewTemplate, err = template.ParseFiles(templateFolder+"/game_new.html", templateFolder+"/base.html")
-	if err != nil {
-		return templates, err
-	}
-
-	templates.GameEditTemplate, err = template.ParseFiles(templateFolder+"/game_edit.html", templateFolder+"/base.html")
+	templates.GameEditFormTemplate, err = template.ParseFiles(templateFolder+"/game_edit_form.html", templateFolder+"/base.html")
 	if err != nil {
 		return templates, err
 	}

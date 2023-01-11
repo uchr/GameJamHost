@@ -7,58 +7,54 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"GameJamPlatform/internal/forms"
 	"GameJamPlatform/internal/gamejam"
-	"GameJamPlatform/internal/log"
 	"GameJamPlatform/internal/templates"
 )
 
-func (s *server) parseJamForm(r *http.Request) (*gamejam.GameJam, error) {
+func (s *server) parseJamForm(r *http.Request) (*gamejam.GameJam, forms.ValidationErrors, error) {
 	err := r.ParseForm()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
+	validationErrors := make(forms.ValidationErrors)
+
 	jam := gamejam.GameJam{
-		Name:            r.FormValue("name"),
+		Title:           r.FormValue("name"),
 		URL:             r.FormValue("url"),
 		Content:         r.FormValue("content"),
 		HideResults:     r.FormValue("hideResults") == "on",
 		HideSubmissions: r.FormValue("hideSubmissions") == "on",
 	}
 
-	jam.StartDate, err = time.Parse(templates.TimeLayout, r.FormValue("startDate"))
+	jam.StartDate, err = time.Parse(forms.TimeLayout, r.FormValue("startDate"))
 	if err != nil {
-		return nil, err
+		validationErrors["StartDate"] = "Must be a valid date"
 	}
-	jam.EndDate, err = time.Parse(templates.TimeLayout, r.FormValue("endDate"))
+	jam.EndDate, err = time.Parse(forms.TimeLayout, r.FormValue("endDate"))
 	if err != nil {
-		return nil, err
+		validationErrors["EndDate"] = "Must be a valid date"
 	}
-	jam.VotingEndDate, err = time.Parse(templates.TimeLayout, r.FormValue("votingEndDate"))
+	jam.VotingEndDate, err = time.Parse(forms.TimeLayout, r.FormValue("votingEndDate"))
 	if err != nil {
-		return nil, err
+		validationErrors["VotingEndDate"] = "Must be a valid date"
 	}
 
-	return &jam, nil
+	return &jam, validationErrors, nil
 }
 
 func (s *server) jamsListHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		jams, err := s.service.GetJams(r.Context())
 		if err != nil {
-			log.Error(err)
-
-			err = s.tmpl.ErrorTemplate.Execute(w, templates.NewErrorPageData(http.StatusInternalServerError))
-			if err != nil {
-				log.Error(err)
-			}
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
 
 		pageData := templates.NewJamListPageData(jams)
-		err = s.tmpl.JamListTemplate.ExecuteTemplate(w, "base", pageData)
-		if err != nil {
-			log.Error(err)
+		if err := s.tmpl.JamListTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -66,9 +62,9 @@ func (s *server) jamsListHandler() http.HandlerFunc {
 
 func (s *server) jamNewHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := s.tmpl.JamNewTemplate.ExecuteTemplate(w, "base", nil)
-		if err != nil {
-			log.Error(err)
+		pageData := templates.NewJamEditFormPageData(true, gamejam.GameJam{}, nil)
+		if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -76,15 +72,31 @@ func (s *server) jamNewHandler() http.HandlerFunc {
 
 func (s *server) jamCreateHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		jam, err := s.parseJamForm(r)
+		jam, validationErrors, err := s.parseJamForm(r)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusBadRequest, err)
+			return
+		}
+		if len(validationErrors) > 0 {
+			pageData := templates.NewJamEditFormPageData(true, *jam, validationErrors)
+			if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+				return
+			}
 			return
 		}
 
-		err = s.service.CreateJam(r.Context(), *jam)
+		validationErrors, err = s.service.CreateJam(r.Context(), *jam)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		if len(validationErrors) > 0 {
+			pageData := templates.NewJamEditFormPageData(true, *jam, validationErrors)
+			if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+				return
+			}
 			return
 		}
 
@@ -98,17 +110,15 @@ func (s *server) jamOverviewHandler() http.HandlerFunc {
 
 		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusNotFound, err)
 			return
 		}
 
 		pageData := templates.NewJamOverviewPageData(*jam)
-		err = s.tmpl.JamOverviewTemplate.ExecuteTemplate(w, "base", pageData)
-		if err != nil {
-			log.Error(err)
+		if err := s.tmpl.JamOverviewTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
-
 	}
 }
 
@@ -117,20 +127,19 @@ func (s *server) jamEditHandler() http.HandlerFunc {
 		jamIDText := chi.URLParam(r, "jamID")
 		jamID, err := strconv.Atoi(jamIDText)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusBadRequest, err)
 			return
 		}
 
 		jam, err := s.service.GetJamByID(r.Context(), jamID)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusNotFound, err)
 			return
 		}
 
-		pageData := templates.NewJamEditPageData(*jam)
-		err = s.tmpl.JamEditTemplate.ExecuteTemplate(w, "base", pageData)
-		if err != nil {
-			log.Error(err)
+		pageData := templates.NewJamEditFormPageData(false, *jam, nil)
+		if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -143,19 +152,35 @@ func (s *server) jamUpdateHandler() http.HandlerFunc {
 		jamIDText := chi.URLParam(r, "jamID")
 		jamID, err := strconv.Atoi(jamIDText)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusBadRequest, err)
 			return
 		}
 
-		jam, err := s.parseJamForm(r)
+		jam, validationErrors, err := s.parseJamForm(r)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusBadRequest, err)
+			return
+		}
+		if len(validationErrors) > 0 {
+			pageData := templates.NewJamEditFormPageData(false, *jam, validationErrors)
+			if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+				return
+			}
 			return
 		}
 
-		err = s.service.UpdateJam(r.Context(), jamID, *jam)
+		validationErrors, err = s.service.UpdateJam(r.Context(), jamID, *jam)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		if validationErrors != nil {
+			pageData := templates.NewJamEditFormPageData(false, *jam, validationErrors)
+			if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+				return
+			}
 			return
 		}
 
@@ -168,13 +193,13 @@ func (s *server) jamDeleteHandler() http.HandlerFunc {
 		jamIDText := chi.URLParam(r, "jamID")
 		jamID, err := strconv.Atoi(jamIDText)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusBadRequest, err)
 			return
 		}
 
 		err = s.service.DeleteJam(r.Context(), jamID)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -188,20 +213,19 @@ func (s *server) jamEntriesHandler() http.HandlerFunc {
 
 		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusNotFound, err)
 			return
 		}
 
 		games, err := s.service.GetGames(r.Context(), jamURL)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
 
 		pageData := templates.NewJamEntriesPageData(*jam, games)
-		err = s.tmpl.JamEntriesTemplate.ExecuteTemplate(w, "base", pageData)
-		if err != nil {
-			log.Error(err)
+		if err := s.tmpl.JamEntriesTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
 	}

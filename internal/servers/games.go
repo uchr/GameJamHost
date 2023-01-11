@@ -6,7 +6,6 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"GameJamPlatform/internal/gamejam"
-	"GameJamPlatform/internal/log"
 	"GameJamPlatform/internal/templates"
 )
 
@@ -17,7 +16,7 @@ func (s *server) parseGameForm(r *http.Request) (*gamejam.Game, error) {
 	}
 
 	game := gamejam.Game{
-		Name:    r.FormValue("name"),
+		Title:   r.FormValue("name"),
 		Build:   r.FormValue("build"),
 		Content: r.FormValue("content"),
 	}
@@ -31,16 +30,49 @@ func (s *server) gameNewHandler() http.HandlerFunc {
 
 		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusNotFound, err)
 			return
 		}
 
-		pageData := templates.NewGameNewPageData(*jam)
-		err = s.tmpl.GameNewTemplate.ExecuteTemplate(w, "base", pageData)
-		if err != nil {
-			log.Error(err)
+		pageData := templates.NewGameEditFormPageData(true, *jam, gamejam.Game{}, nil)
+		if err := s.tmpl.GameEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
+	}
+}
+
+func (s *server) gameCreateHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		jamURL := chi.URLParam(r, "jamURL")
+
+		game, err := s.parseGameForm(r)
+		if err != nil {
+			s.executeErrorPage(w, r, http.StatusBadRequest, err)
+			return
+		}
+
+		gameURL, validationErrors, err := s.service.CreateGame(r.Context(), jamURL, *game)
+		if err != nil {
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		if len(validationErrors) > 0 {
+			jam, err := s.service.GetJamByURL(r.Context(), jamURL)
+			if err != nil {
+				s.executeErrorPage(w, r, http.StatusNotFound, err)
+				return
+			}
+
+			pageData := templates.NewGameEditFormPageData(true, *jam, *game, validationErrors)
+			if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+				return
+			}
+			return
+		}
+
+		http.Redirect(w, r, "/jams/"+jamURL+"/games/"+gameURL, http.StatusSeeOther)
 	}
 }
 
@@ -51,20 +83,19 @@ func (s *server) gameOverviewHandler() http.HandlerFunc {
 
 		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusNotFound, err)
 			return
 		}
 
 		game, err := s.service.GetGame(r.Context(), jamURL, gameURL)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusNotFound, err)
 			return
 		}
 
 		pageData := templates.NewGameOverviewPageData(*jam, *game)
-		err = s.tmpl.GameOverviewTemplate.ExecuteTemplate(w, "base", pageData)
-		if err != nil {
-			log.Error(err)
+		if err := s.tmpl.GameOverviewTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
 	}
@@ -77,55 +108,21 @@ func (s *server) gameEditHandler() http.HandlerFunc {
 
 		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusNotFound, err)
 			return
 		}
 
 		game, err := s.service.GetGame(r.Context(), jamURL, gameURL)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusNotFound, err)
 			return
 		}
 
-		pageData := templates.NewGameEditPageData(*jam, *game)
-		err = s.tmpl.GameEditTemplate.ExecuteTemplate(w, "base", pageData)
-		if err != nil {
-			log.Error(err)
+		pageData := templates.NewGameEditFormPageData(false, *jam, *game, nil)
+		if err := s.tmpl.GameEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return
 		}
-	}
-}
-
-func (s *server) gameBanHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		jamURL := chi.URLParam(r, "jamURL")
-		gameURL := chi.URLParam(r, "gameURL")
-
-		err := s.service.BanGame(r.Context(), jamURL, gameURL)
-		if err != nil {
-			log.Error(err)
-			return
-		}
-	}
-}
-
-func (s *server) gameCreateHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		jamURL := chi.URLParam(r, "jamURL")
-
-		game, err := s.parseGameForm(r)
-		if err != nil {
-			log.Error(err)
-			return
-		}
-
-		gameURL, err := s.service.CreateGame(r.Context(), jamURL, *game)
-		if err != nil {
-			log.Error(err)
-			return
-		}
-
-		http.Redirect(w, r, "/jams/"+jamURL+"/games/"+gameURL, http.StatusSeeOther)
 	}
 }
 
@@ -136,12 +133,39 @@ func (s *server) gameUpdateHandler() http.HandlerFunc {
 
 		game, err := s.parseGameForm(r)
 
-		err = s.service.UpdateGame(r.Context(), jamURL, gameURL, *game)
+		validationErrors, err := s.service.UpdateGame(r.Context(), jamURL, gameURL, *game)
 		if err != nil {
-			log.Error(err)
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		if len(validationErrors) > 0 {
+			jam, err := s.service.GetJamByURL(r.Context(), jamURL)
+			if err != nil {
+				s.executeErrorPage(w, r, http.StatusNotFound, err)
+				return
+			}
+
+			pageData := templates.NewGameEditFormPageData(false, *jam, *game, validationErrors)
+			if err := s.tmpl.GameEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
+				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+				return
+			}
 			return
 		}
 
 		http.Redirect(w, r, "/jams/"+jamURL+"/games/"+gameURL, http.StatusSeeOther)
+	}
+}
+
+func (s *server) gameBanHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		jamURL := chi.URLParam(r, "jamURL")
+		gameURL := chi.URLParam(r, "gameURL")
+
+		err := s.service.BanGame(r.Context(), jamURL, gameURL)
+		if err != nil {
+			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			return
+		}
 	}
 }
