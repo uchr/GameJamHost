@@ -5,7 +5,7 @@
 <h1 class="title"> Edit {{.Game.Title}} </h1>
 {{end}}
 
-<form action="{{ if .IsNewGame }}/jams/{{.Jam.URL}}/game/new{{else}}/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit{{end}}" method="POST">
+<form enctype="multipart/form-data"  action="{{ if .IsNewGame }}/jams/{{.Jam.URL}}/game/new{{else}}/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit{{end}}" method="POST">
     <div class="field">
         <label class="label">Title</label>
         <div class="control">
@@ -29,6 +29,40 @@
             <p class="help is-danger">{{ .Errors.Content }}</p>
             {{ end }}
             <textarea class="textarea" name="content" placeholder="Content" rows="20">{{.Game.Content}}</textarea>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="control">
+            {{ if .Game.CoverImageURL }}
+            <img src="/static/user_images/{{.Game.CoverImageURL}}" alt="Cover image" />
+            {{ end }}
+            <label class="label">Cover image</label>
+            <input type="file" name="CoverImage" />
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="control">
+            {{ if gt (len .Game.ScreenshotURLs) 0 }}
+            <img src="/static/user_images/{{index .Game.ScreenshotURLs 0}}" alt="Screenshot 1" />
+            {{ end }}
+            <label class="label">Screenshot 1</label>
+            <input type="file" name="Screenshot-0" />
+        </div>
+        <div class="control">
+            {{ if gt (len .Game.ScreenshotURLs) 1 }}
+            <img src="/static/user_images/{{index .Game.ScreenshotURLs 1}}" alt="Screenshot 2" />
+            {{ end }}
+            <label class="label">Screenshot 2</label>
+            <input type="file" name="Screenshot-1" />
+        </div>
+        <div class="control">
+            {{ if gt (len .Game.ScreenshotURLs) 2 }}
+            <img src="/static/user_images/{{index .Game.ScreenshotURLs 2}}" alt="Screenshot 3" />
+            {{ end }}
+            <label class="label">Screenshot 3</label>
+            <input type="file" name="Screenshot-2" />
         </div>
     </div>
 

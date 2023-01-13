@@ -21,6 +21,7 @@
 go.work
 
 # Custom
-.env
-logs/
-.idea/
+/.env
+/logs/
+/.idea/
+/static/

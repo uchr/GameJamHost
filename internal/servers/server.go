@@ -33,7 +33,7 @@ func (s *server) Run() error {
 	r.Use(log.LoggerMiddleware())
 	r.Use(middleware.Recoverer)
 
-	fs := http.FileServer(http.Dir("web/static/"))
+	fs := http.FileServer(http.Dir(s.cfg.StaticDir))
 
 	r.Route("/", func(r chi.Router) {
 		r.Get("/jams", s.jamsListHandler())

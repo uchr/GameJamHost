@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS game_jams (
     game_jam_id INT GENERATED ALWAYS AS IDENTITY,
-    name text,
+    title text,
     url text,
     content text,
+    cover_image text,
     start_date timestamptz,
     end_date timestamptz,
     voting_end_date timestamptz,
@@ -13,9 +14,11 @@ CREATE TABLE IF NOT EXISTS game_jams (
 CREATE TABLE IF NOT EXISTS games (
     game_id INT GENERATED ALWAYS AS IDENTITY,
     game_jam_id INT,
-    name text,
+    title text,
     url text,
     content text,
+    cover_image text,
+    screenshot_images text[],
     build text,
     is_banned bool,
     created_at timestamptz not null default current_timestamp);

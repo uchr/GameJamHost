@@ -125,6 +125,12 @@ func (sr *Service) UpdateGame(ctx context.Context, jamURL string, gameURL string
 	prevGame.Title = game.Title
 	prevGame.Content = game.Content
 	prevGame.Build = game.Build
+	if game.CoverImageURL != "" {
+		prevGame.CoverImageURL = game.CoverImageURL
+	}
+	if game.ScreenshotURLs != nil {
+		prevGame.ScreenshotURLs = game.ScreenshotURLs
+	}
 
 	err = sr.repo.UpdateGame(ctx, *prevGame)
 	return nil, err

@@ -4,7 +4,7 @@
 {{ else }}
 <h1 class="title"> Edit Game Jam </h1>
 {{ end }}
-<form action="{{ if .IsNewJam }} /jam/new {{ else }} /jams/{{.Jam.ID}}/edit {{ end }}" method="POST">
+<form enctype="multipart/form-data" action="{{ if .IsNewJam }} /jam/new {{ else }} /jams/{{.Jam.ID}}/edit {{ end }}" method="POST">
     <div class="field">
         <label class="label">Title</label>
         <div class="control">
@@ -28,6 +28,16 @@
             <p class="help is-danger">{{ . }}</p>
             {{ end }}
             <textarea class="textarea" name="content" placeholder="Content" rows="20">{{.Jam.Content}}</textarea>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="control">
+            {{ if .Jam.CoverImageURL }}
+            <img src="/static/user_images/{{.Jam.CoverImageURL}}" alt="Cover image" />
+            {{ end }}
+            <label class="label">Cover image</label>
+            <input type="file" name="CoverImage" />
         </div>
     </div>
 
