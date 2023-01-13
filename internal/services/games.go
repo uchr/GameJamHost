@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"GameJamPlatform/internal/forms"
-	"GameJamPlatform/internal/gamejam"
+	"GameJamPlatform/internal/models"
 	"GameJamPlatform/internal/storages"
 )
 
@@ -18,7 +18,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func (sr *Service) validateGame(game gamejam.Game) forms.ValidationErrors {
+func (sr *Service) validateGame(game models.Game) forms.ValidationErrors {
 	const maxTitleLength = 64
 	const maxBuildLength = 1000
 	const maxContentLength = 10000
@@ -85,7 +85,7 @@ func (sr *Service) generateGameUrl(ctx context.Context, jamID int, gameName stri
 }
 
 // CreateGame creates a new game in the database and returns the game's URL.
-func (sr *Service) CreateGame(ctx context.Context, jamURL string, game gamejam.Game) (string, forms.ValidationErrors, error) {
+func (sr *Service) CreateGame(ctx context.Context, jamURL string, game models.Game) (string, forms.ValidationErrors, error) {
 	validationErrors := sr.validateGame(game)
 	if len(validationErrors) > 0 {
 		return "", validationErrors, nil
@@ -106,7 +106,7 @@ func (sr *Service) CreateGame(ctx context.Context, jamURL string, game gamejam.G
 	return game.URL, nil, err
 }
 
-func (sr *Service) UpdateGame(ctx context.Context, jamURL string, gameURL string, game gamejam.Game) (forms.ValidationErrors, error) {
+func (sr *Service) UpdateGame(ctx context.Context, jamURL string, gameURL string, game models.Game) (forms.ValidationErrors, error) {
 	validationErrors := sr.validateGame(game)
 	if len(validationErrors) > 0 {
 		return validationErrors, nil
@@ -146,7 +146,7 @@ func (sr *Service) BanGame(ctx context.Context, jamURL string, gameURL string) e
 	return err
 }
 
-func (sr *Service) GetGame(ctx context.Context, jamURL string, gameURL string) (*gamejam.Game, error) {
+func (sr *Service) GetGame(ctx context.Context, jamURL string, gameURL string) (*models.Game, error) {
 	jamID, err := sr.repo.GetJamID(ctx, jamURL)
 	if err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ func (sr *Service) GetGame(ctx context.Context, jamURL string, gameURL string) (
 	return game, nil
 }
 
-func (sr *Service) GetGames(ctx context.Context, jamURL string) ([]gamejam.Game, error) {
+func (sr *Service) GetGames(ctx context.Context, jamURL string) ([]models.Game, error) {
 	jamID, err := sr.repo.GetJamID(ctx, jamURL)
 	if err != nil {
 		return nil, err

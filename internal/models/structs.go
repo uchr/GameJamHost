@@ -1,4 +1,4 @@
-package gamejam
+package models
 
 import "time"
 

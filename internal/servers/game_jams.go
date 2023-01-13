@@ -8,11 +8,11 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"GameJamPlatform/internal/forms"
-	"GameJamPlatform/internal/gamejam"
+	"GameJamPlatform/internal/models"
 	"GameJamPlatform/internal/templates"
 )
 
-func (s *server) parseJamForm(r *http.Request) (*gamejam.GameJam, forms.ValidationErrors, error) {
+func (s *server) parseJamForm(r *http.Request) (*models.GameJam, forms.ValidationErrors, error) {
 	const maxUploadSize = 10 * 1024 * 1024 // 10 mb
 	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
@@ -21,7 +21,7 @@ func (s *server) parseJamForm(r *http.Request) (*gamejam.GameJam, forms.Validati
 
 	validationErrors := make(forms.ValidationErrors)
 
-	jam := gamejam.GameJam{
+	jam := models.GameJam{
 		Title:           r.FormValue("name"),
 		URL:             r.FormValue("url"),
 		Content:         r.FormValue("content"),
@@ -71,7 +71,7 @@ func (s *server) jamsListHandler() http.HandlerFunc {
 
 func (s *server) jamNewHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		pageData := templates.NewJamEditFormPageData(true, gamejam.GameJam{}, nil)
+		pageData := templates.NewJamEditFormPageData(true, models.GameJam{}, nil)
 		if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
 			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return

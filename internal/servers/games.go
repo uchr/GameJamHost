@@ -6,18 +6,18 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"GameJamPlatform/internal/gamejam"
+	"GameJamPlatform/internal/models"
 	"GameJamPlatform/internal/templates"
 )
 
-func (s *server) parseGameForm(r *http.Request) (*gamejam.Game, error) {
+func (s *server) parseGameForm(r *http.Request) (*models.Game, error) {
 	const maxUploadSize = 10 * 1024 * 1024 // 10 mb
 	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
 		return nil, err
 	}
 
-	game := gamejam.Game{
+	game := models.Game{
 		Title:   r.FormValue("name"),
 		Build:   r.FormValue("build"),
 		Content: r.FormValue("content"),
@@ -54,7 +54,7 @@ func (s *server) gameNewHandler() http.HandlerFunc {
 			return
 		}
 
-		pageData := templates.NewGameEditFormPageData(true, *jam, gamejam.Game{}, nil)
+		pageData := templates.NewGameEditFormPageData(true, *jam, models.Game{}, nil)
 		if err := s.tmpl.GameEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
 			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
 			return

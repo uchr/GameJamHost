@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"GameJamPlatform/internal/forms"
-	"GameJamPlatform/internal/gamejam"
+	"GameJamPlatform/internal/models"
 )
 
-func (sr *Service) validateJam(ctx context.Context, jam gamejam.GameJam) (forms.ValidationErrors, error) {
+func (sr *Service) validateJam(ctx context.Context, jam models.GameJam) (forms.ValidationErrors, error) {
 	const maxTitleLength = 64
 	const maxURLLength = 64
 	const maxContentLength = 10000
@@ -42,12 +42,12 @@ func (sr *Service) validateJam(ctx context.Context, jam gamejam.GameJam) (forms.
 	return validationErrors, nil
 }
 
-func (sr *Service) GetJams(ctx context.Context) ([]gamejam.GameJam, error) {
+func (sr *Service) GetJams(ctx context.Context) ([]models.GameJam, error) {
 	gameJams, err := sr.repo.GetJams(ctx)
 	return gameJams, err
 }
 
-func (sr *Service) CreateJam(ctx context.Context, jam gamejam.GameJam) (forms.ValidationErrors, error) {
+func (sr *Service) CreateJam(ctx context.Context, jam models.GameJam) (forms.ValidationErrors, error) {
 	jam.Title = strings.TrimSpace(jam.Title)
 	validationErrors, err := sr.validateJam(ctx, jam)
 	if err != nil {
@@ -66,7 +66,7 @@ func (sr *Service) DeleteJam(ctx context.Context, jamID int) error {
 	return err
 }
 
-func (sr *Service) GetJamByURL(ctx context.Context, jamURL string) (*gamejam.GameJam, error) {
+func (sr *Service) GetJamByURL(ctx context.Context, jamURL string) (*models.GameJam, error) {
 	jamID, err := sr.repo.GetJamID(ctx, jamURL)
 	if err != nil {
 		return nil, err
@@ -76,12 +76,12 @@ func (sr *Service) GetJamByURL(ctx context.Context, jamURL string) (*gamejam.Gam
 	return jam, err
 }
 
-func (sr *Service) GetJamByID(ctx context.Context, jamID int) (*gamejam.GameJam, error) {
+func (sr *Service) GetJamByID(ctx context.Context, jamID int) (*models.GameJam, error) {
 	jam, err := sr.repo.GetJam(ctx, jamID)
 	return jam, err
 }
 
-func (sr *Service) UpdateJam(ctx context.Context, jamID int, jam gamejam.GameJam) (forms.ValidationErrors, error) {
+func (sr *Service) UpdateJam(ctx context.Context, jamID int, jam models.GameJam) (forms.ValidationErrors, error) {
 	jam.Title = strings.TrimSpace(jam.Title)
 	jam.ID = jamID
 
@@ -97,7 +97,7 @@ func (sr *Service) UpdateJam(ctx context.Context, jamID int, jam gamejam.GameJam
 	return nil, err
 }
 
-func (sr *Service) JamEntries(ctx context.Context, jamURL string) ([]gamejam.Game, error) {
+func (sr *Service) JamEntries(ctx context.Context, jamURL string) ([]models.Game, error) {
 	jamID, err := sr.repo.GetJamID(ctx, jamURL)
 	if err != nil {
 		return nil, err
