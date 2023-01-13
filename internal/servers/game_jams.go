@@ -13,7 +13,8 @@ import (
 )
 
 func (s *server) parseJamForm(r *http.Request) (*gamejam.GameJam, forms.ValidationErrors, error) {
-	err := r.ParseForm()
+	const maxUploadSize = 10 * 1024 * 1024 // 10 mb
+	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -39,6 +40,14 @@ func (s *server) parseJamForm(r *http.Request) (*gamejam.GameJam, forms.Validati
 	jam.VotingEndDate, err = time.Parse(forms.TimeLayout, r.FormValue("votingEndDate"))
 	if err != nil {
 		validationErrors["VotingEndDate"] = "Must be a valid date"
+	}
+
+	coverImageURL, err := s.uploadImage(r, "CoverImage")
+	if err != nil {
+		return nil, nil, err
+	}
+	if coverImageURL != "" {
+		jam.CoverImageURL = coverImageURL
 	}
 
 	return &jam, validationErrors, nil

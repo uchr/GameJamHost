@@ -6,7 +6,9 @@ import (
 )
 
 type Config struct {
-	HostURI string `env:"HOST_URI,required"`
+	HostURI   string `env:"HOST_URI,required"`
+	ImageDir  string `env:"IMAGE_DIR,required"`
+	StaticDir string `env:"STATIC_DIR,required"`
 }
 
 func NewConfig() (*Config, error) {

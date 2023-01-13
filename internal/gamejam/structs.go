@@ -16,7 +16,7 @@ type GameJam struct {
 	HideResults     bool
 	HideSubmissions bool
 
-	// CoverImageUrl string // TODO: add cover image
+	CoverImageURL string
 }
 
 type Game struct {
@@ -30,6 +30,6 @@ type Game struct {
 
 	IsBanned bool
 
-	// CoverImageUrl string // TODO: add cover image
-	// Screenshots   []string // TODO: add screenshots
+	CoverImageURL  string
+	ScreenshotURLs []string
 }

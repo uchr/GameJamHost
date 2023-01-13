@@ -1,5 +1,8 @@
 {{define "content"}}
 <div class="content">
+    {{ if .Jam.CoverImageURL }}
+    <img src="/static/user_images/{{.Jam.CoverImageURL}}" alt="Cover image" />
+    {{ end }}
     <h1 class="title is-1">{{.Jam.Title}}</h1>
     <a href="/jams/{{.Jam.URL}}" class="button is-small is-link">Overview</a>
     <a href="/jams/{{.Jam.URL}}/entries" class="button is-small is-link">Submissions</a>

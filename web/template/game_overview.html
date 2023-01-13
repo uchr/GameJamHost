@@ -7,6 +7,19 @@
         <a href="{{.Game.Build}}" class="button is-link">Download</a>
     </p>
 
+    {{ if .Game.CoverImageURL }}
+    <img src="/static/user_images/{{.Game.CoverImageURL}}" alt="Cover image" />
+    {{ end }}
+    {{ if gt (len .Game.ScreenshotURLs) 0 }}
+    <img src="/static/user_images/{{index .Game.ScreenshotURLs 0}}" alt="Screenshot 1" />
+    {{ end }}
+    {{ if gt (len .Game.ScreenshotURLs) 1 }}
+    <img src="/static/user_images/{{index .Game.ScreenshotURLs 1}}" alt="Screenshot 2" />
+    {{ end }}
+    {{ if gt (len .Game.ScreenshotURLs) 2 }}
+    <img src="/static/user_images/{{index .Game.ScreenshotURLs 2}}" alt="Screenshot 3" />
+    {{ end }}
+
     {{.RenderedContent}}
 
     <a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit" class="button is-link">Edit</a>

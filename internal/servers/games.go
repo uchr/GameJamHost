@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -10,7 +11,8 @@ import (
 )
 
 func (s *server) parseGameForm(r *http.Request) (*gamejam.Game, error) {
-	err := r.ParseForm()
+	const maxUploadSize = 10 * 1024 * 1024 // 10 mb
+	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
 		return nil, err
 	}
@@ -19,6 +21,24 @@ func (s *server) parseGameForm(r *http.Request) (*gamejam.Game, error) {
 		Title:   r.FormValue("name"),
 		Build:   r.FormValue("build"),
 		Content: r.FormValue("content"),
+	}
+
+	coverImageURL, err := s.uploadImage(r, "CoverImage")
+	if err != nil {
+		return nil, err
+	}
+	if coverImageURL != "" {
+		game.CoverImageURL = coverImageURL
+	}
+
+	for i := 0; i < 3; i++ {
+		imageURL, err := s.uploadImage(r, fmt.Sprintf("Screenshot-%d", i))
+		if err != nil {
+			return nil, err
+		}
+		if imageURL != "" {
+			game.ScreenshotURLs = append(game.ScreenshotURLs, imageURL)
+		}
 	}
 
 	return &game, nil
