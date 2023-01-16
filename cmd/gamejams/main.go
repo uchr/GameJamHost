@@ -5,7 +5,9 @@ import (
 
 	"GameJamPlatform/internal/log"
 	"GameJamPlatform/internal/servers"
-	"GameJamPlatform/internal/services"
+	"GameJamPlatform/internal/services/gamejams"
+	"GameJamPlatform/internal/services/sessionprovider"
+	"GameJamPlatform/internal/services/users"
 	"GameJamPlatform/internal/storages"
 	"GameJamPlatform/internal/templates"
 )
@@ -35,8 +37,12 @@ func main() {
 		log.Panic(err, "failed to create server config")
 	}
 
-	service := services.NewService(repo)
-	server := servers.NewServer(service, tmpl, serverConfig)
+	u := users.NewUsers(repo)
+
+	sp := sessionprovider.NewProvider(repo)
+
+	service := gamejams.NewService(repo)
+	server := servers.NewServer(service, tmpl, u, sp, serverConfig)
 	err = server.Run()
 	if err != nil {
 		log.Panic(err, "failed to start server")

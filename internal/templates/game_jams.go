@@ -4,31 +4,37 @@ import (
 	"html/template"
 
 	"GameJamPlatform/internal/forms"
-	"GameJamPlatform/internal/models"
+	"GameJamPlatform/internal/models/gamejams"
 )
 
 type JamListPageData struct {
-	Jams []models.GameJam
+	AuthPageData
+
+	Jams []gamejams.GameJam
 }
 
-func NewJamListPageData(jams []models.GameJam) JamListPageData {
+func NewJamListPageData(jams []gamejams.GameJam) JamListPageData {
 	return JamListPageData{Jams: jams}
 }
 
 type JamOverviewPageData struct {
-	Jam models.GameJam
+	AuthPageData
+
+	Jam gamejams.GameJam
 
 	RenderedContent template.HTML
 }
 
-func NewJamOverviewPageData(jam models.GameJam) JamOverviewPageData {
+func NewJamOverviewPageData(jam gamejams.GameJam) JamOverviewPageData {
 	return JamOverviewPageData{Jam: jam, RenderedContent: renderContent(jam.Content)}
 }
 
 type JamEditFormPageData struct {
+	AuthPageData
+
 	IsNewJam bool
 
-	Jam    models.GameJam
+	Jam    gamejams.GameJam
 	Errors forms.ValidationErrors
 
 	StartDate     string
@@ -36,7 +42,7 @@ type JamEditFormPageData struct {
 	VotingEndDate string
 }
 
-func NewJamEditFormPageData(isNewJam bool, jam models.GameJam, validationErrors forms.ValidationErrors) JamEditFormPageData {
+func NewJamEditFormPageData(isNewJam bool, jam gamejams.GameJam, validationErrors forms.ValidationErrors) JamEditFormPageData {
 	pageData := JamEditFormPageData{
 		IsNewJam: isNewJam,
 		Jam:      jam,
@@ -57,10 +63,12 @@ func NewJamEditFormPageData(isNewJam bool, jam models.GameJam, validationErrors 
 }
 
 type JamEntriesPageData struct {
-	Jam   models.GameJam
-	Games []models.Game
+	AuthPageData
+
+	Jam   gamejams.GameJam
+	Games []gamejams.Game
 }
 
-func NewJamEntriesPageData(jam models.GameJam, games []models.Game) JamEntriesPageData {
+func NewJamEntriesPageData(jam gamejams.GameJam, games []gamejams.Game) JamEntriesPageData {
 	return JamEntriesPageData{Jam: jam, Games: games}
 }

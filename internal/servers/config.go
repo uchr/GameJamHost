@@ -6,9 +6,10 @@ import (
 )
 
 type Config struct {
-	HostURI   string `env:"HOST_URI,required"`
-	ImageDir  string `env:"IMAGE_DIR,required"`
-	StaticDir string `env:"STATIC_DIR,required"`
+	HostURI    string `env:"HOST_URI,required"`
+	ImageDir   string `env:"IMAGE_DIR,required"`
+	StaticDir  string `env:"STATIC_DIR,required"`
+	SessionKey string `env:"SESSION_KEY,required"`
 }
 
 func NewConfig() (*Config, error) {

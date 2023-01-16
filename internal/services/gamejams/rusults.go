@@ -1,4 +1,4 @@
-package services
+package gamejams
 
 import "context"
 

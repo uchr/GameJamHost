@@ -1,0 +1,63 @@
+{{define "base"}}
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Game Jams</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    </head>
+    <body>
+
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="/">Game Jam Host</a>
+
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasic">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+
+        <div id="navbarBasic" class="navbar-menu">
+            <div class="navbar-end">
+                {{ if .IsAuth }}
+                <div class="navbar-item">
+                    <div class="buttons">
+                        <a class="button is-primary" href="/users/{{ .User.Username}}">
+                            <strong>Profile</strong>
+                        </a>
+                        <a class="button is-light" href="/user/logout">
+                            Log out
+                        </a>
+                    </div>
+                </div>
+                {{ else }}
+                <div class="navbar-item">
+                    <div class="buttons">
+                        <a class="button is-light" href="/user/new">
+                            Register
+                        </a>
+                        <a class="button is-light" href="/user/login">
+                            Log In
+                        </a>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </nav>
+
+    <section class="section">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    {{ template "content" . }}
+                </div>
+            </div>
+        </div>
+    </section>
+    </body>
+    </html>
+{{end}}

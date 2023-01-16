@@ -5,23 +5,32 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/sessions"
 
 	"GameJamPlatform/internal/log"
-	"GameJamPlatform/internal/services"
+	"GameJamPlatform/internal/services/gamejams"
+	"GameJamPlatform/internal/services/sessionprovider"
 	"GameJamPlatform/internal/templates"
 )
 
 type server struct {
-	service *services.Service
+	sessionProvider sessionprovider.SessionProvider
+	cookieStore     *sessions.CookieStore
+
+	service *gamejams.Service
+	users   Users
 	tmpl    templates.Templates
 	cfg     *Config
 }
 
-func NewServer(service *services.Service, tmpl templates.Templates, cfg *Config) Server {
+func NewServer(service *gamejams.Service, tmpl templates.Templates, users Users, sessionProvider sessionprovider.SessionProvider, cfg *Config) Server {
 	return &server{
-		service: service,
-		tmpl:    tmpl,
-		cfg:     cfg,
+		sessionProvider: sessionProvider,
+		cookieStore:     sessions.NewCookieStore([]byte(cfg.SessionKey)),
+		service:         service,
+		users:           users,
+		tmpl:            tmpl,
+		cfg:             cfg,
 	}
 }
 
@@ -36,6 +45,9 @@ func (s *server) Run() error {
 	fs := http.FileServer(http.Dir(s.cfg.StaticDir))
 
 	r.Route("/", func(r chi.Router) {
+		r.Get("/", s.indexHandler())
+
+		// Jams
 		r.Get("/jams", s.jamsListHandler())
 		r.Get("/jam/new", s.jamNewHandler())
 		r.Post("/jam/new", s.jamCreateHandler())
@@ -47,6 +59,7 @@ func (s *server) Run() error {
 		r.Get("/jams/{jamID}/delete", s.jamDeleteHandler())
 		r.Post("/jams/{jamID}/edit", s.jamUpdateHandler())
 
+		// Games
 		r.Get("/jams/{jamURL}/game/new", s.gameNewHandler())
 		r.Post("/jams/{jamURL}/game/new", s.gameCreateHandler())
 
@@ -54,6 +67,18 @@ func (s *server) Run() error {
 		r.Get("/jams/{jamURL}/games/{gameURL}/edit", s.gameEditHandler())
 		r.Get("/jams/{jamURL}/games/{gameURL}/ban", s.gameBanHandler())
 		r.Post("/jams/{jamURL}/games/{gameURL}/edit", s.gameUpdateHandler())
+
+		// Users
+		r.Get("/user/new", s.userNewHandler())
+		r.Post("/user/new", s.userCreateHandler())
+
+		r.Get("/user/login", s.loginHandler())
+		r.Post("/user/login", s.authHandler())
+		r.Get("/user/logout", s.logoutHandler())
+
+		//r.Get("/users/{username}", s.userProfileHandler())
+		//r.Get("/users/{username}/edit", s.userEditHandler())
+		//r.Post("/users/{username}/edit", s.userUpdateHandler())
 
 		//r.Get("/jams/{jamURL}/results", s.jamResultsHandler())
 

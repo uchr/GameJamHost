@@ -4,19 +4,20 @@ import (
 	"html/template"
 
 	"GameJamPlatform/internal/forms"
-	"GameJamPlatform/internal/models"
+	"GameJamPlatform/internal/models/gamejams"
 )
 
 type GameEditFormPageData struct {
+	AuthPageData
 	IsNewGame bool
 
-	Jam  models.GameJam
-	Game models.Game
+	Jam  gamejams.GameJam
+	Game gamejams.Game
 
 	Errors forms.ValidationErrors
 }
 
-func NewGameEditFormPageData(isNewGame bool, jam models.GameJam, game models.Game, validationErrors forms.ValidationErrors) GameEditFormPageData {
+func NewGameEditFormPageData(isNewGame bool, jam gamejams.GameJam, game gamejams.Game, validationErrors forms.ValidationErrors) GameEditFormPageData {
 	return GameEditFormPageData{
 		IsNewGame: isNewGame,
 		Jam:       jam,
@@ -25,12 +26,13 @@ func NewGameEditFormPageData(isNewGame bool, jam models.GameJam, game models.Gam
 }
 
 type GameOverviewPageData struct {
-	Jam  models.GameJam
-	Game models.Game
+	AuthPageData
+	Jam  gamejams.GameJam
+	Game gamejams.Game
 
 	RenderedContent template.HTML
 }
 
-func NewGameOverviewPageData(jam models.GameJam, game models.Game) GameOverviewPageData {
+func NewGameOverviewPageData(jam gamejams.GameJam, game gamejams.Game) GameOverviewPageData {
 	return GameOverviewPageData{Jam: jam, Game: game, RenderedContent: renderContent(game.Content)}
 }
