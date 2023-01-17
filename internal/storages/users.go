@@ -2,6 +2,9 @@ package storages
 
 import (
 	"context"
+	"errors"
+
+	"github.com/jackc/pgx/v4"
 
 	"GameJamPlatform/internal/models/users"
 )
@@ -21,6 +24,9 @@ func (st *storage) GetUserByID(ctx context.Context, userID int) (*users.User, er
 	var user users.User
 	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.AvatarURL, &user.About)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
@@ -33,6 +39,9 @@ func (st *storage) GetUserByUsername(ctx context.Context, username string) (*use
 	var user users.User
 	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.AvatarURL, &user.About)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
@@ -45,6 +54,9 @@ func (st *storage) GetUserByEmail(ctx context.Context, email string) (*users.Use
 	var user users.User
 	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.AvatarURL, &user.About)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 

@@ -8,9 +8,9 @@ import (
 	"github.com/gorilla/sessions"
 
 	"GameJamPlatform/internal/log"
-	"GameJamPlatform/internal/services/gamejams"
+	"GameJamPlatform/internal/services/gamejammanager"
 	"GameJamPlatform/internal/services/sessionprovider"
-	"GameJamPlatform/internal/services/users"
+	"GameJamPlatform/internal/services/usersmanager"
 	"GameJamPlatform/internal/web/templatemanager"
 )
 
@@ -18,21 +18,21 @@ type server struct {
 	sessionProvider sessionprovider.SessionProvider
 	cookieStore     *sessions.CookieStore
 
-	service *gamejams.Service
-	users   users.Users
-	tm      templatemanager.TemplateManager
+	gameJams gamejammanager.GameJamManager
+	users    usersmanager.UserManager
+	tm       templatemanager.TemplateManager
 
 	cfg *Config
 }
 
-func NewServer(service *gamejams.Service, tm templatemanager.TemplateManager, users users.Users, sessionProvider sessionprovider.SessionProvider, cfg *Config) Server {
+func NewServer(gameJams gamejammanager.GameJamManager, tm templatemanager.TemplateManager, users usersmanager.UserManager, sessionProvider sessionprovider.SessionProvider, cfg *Config) Server {
 	return &server{
 		sessionProvider: sessionProvider,
 		cookieStore:     sessions.NewCookieStore([]byte(cfg.SessionKey)),
 
-		service: service,
-		users:   users,
-		tm:      tm,
+		gameJams: gameJams,
+		users:    users,
+		tm:       tm,
 
 		cfg: cfg,
 	}

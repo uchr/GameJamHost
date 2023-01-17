@@ -34,7 +34,7 @@ func (s *server) isAuthorized(r *http.Request) (*sessions.Session, error) {
 	return session, nil
 }
 
-func (s *server) authorize(w http.ResponseWriter, r *http.Request, userID int) error {
+func (s *server) login(w http.ResponseWriter, r *http.Request, userID int) error {
 	session, err := s.isAuthorized(r)
 	if err != nil {
 		return err
@@ -55,6 +55,26 @@ func (s *server) authorize(w http.ResponseWriter, r *http.Request, userID int) e
 
 	sessionCookie.Values["token"] = session.UID
 	if err := sessionCookie.Save(r, w); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *server) logout(w http.ResponseWriter, r *http.Request, session sessions.Session) error {
+	sessionCookie, err := s.cookieStore.Get(r, "session")
+	if err != nil {
+		return err
+	}
+
+	sessionCookie.Values["token"] = ""
+	err = sessionCookie.Save(r, w)
+	if err != nil {
+		return err
+	}
+
+	err = s.sessionProvider.Delete(r.Context(), session.UID)
+	if err != nil {
 		return err
 	}
 

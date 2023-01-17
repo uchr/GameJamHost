@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS game_jams (
     game_jam_id INT GENERATED ALWAYS AS IDENTITY,
+    user_id INT NOT NULL,
     title text,
     url text,
     content text,
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS game_jams (
 CREATE TABLE IF NOT EXISTS games (
     game_id INT GENERATED ALWAYS AS IDENTITY,
     game_jam_id INT,
+    user_id INT NOT NULL,
     title text,
     url text,
     content text,
@@ -43,7 +45,7 @@ CREATE TABLE IF NOT EXISTS participants (
     created_at timestamptz not null default current_timestamp);
 
 CREATE TABLE IF NOT EXISTS sessions (
-    session_id text,
+    session_id text PRIMARY KEY,
     user_id INT,
     expire_at timestamptz);
 
@@ -53,3 +55,5 @@ DROP TABLE IF EXISTS game_jams;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS participants;
+DROP TABLE IF EXISTS sessions;
+

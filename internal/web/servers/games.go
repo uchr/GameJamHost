@@ -56,7 +56,7 @@ func (s *server) gameNewHandlerGet() http.HandlerFunc {
 
 		jamURL := chi.URLParam(r, "jamURL")
 
-		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
+		jam, err := s.gameJams.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
@@ -85,7 +85,7 @@ func (s *server) gameNewHandlerPost() http.HandlerFunc {
 			return
 		}
 
-		gameURL, validationErrors, err := s.service.CreateGame(r.Context(), jamURL, *game)
+		gameURL, validationErrors, err := s.gameJams.CreateGame(r.Context(), jamURL, *user, *game)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
@@ -94,7 +94,7 @@ func (s *server) gameNewHandlerPost() http.HandlerFunc {
 			http.Redirect(w, r, "/jams/"+jamURL+"/games/"+gameURL, http.StatusSeeOther)
 		}
 
-		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
+		jam, err := s.gameJams.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
@@ -114,13 +114,13 @@ func (s *server) gameOverviewHandlerGet() http.HandlerFunc {
 		jamURL := chi.URLParam(r, "jamURL")
 		gameURL := chi.URLParam(r, "gameURL")
 
-		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
+		jam, err := s.gameJams.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
 		}
 
-		game, err := s.service.GetGame(r.Context(), jamURL, gameURL)
+		game, err := s.gameJams.GetGame(r.Context(), jamURL, gameURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
@@ -135,25 +135,29 @@ func (s *server) gameEditHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const pageName = "game_edit_form"
 
-		// TODO: check if user is owner of game
-		user := s.authedUser(r)
-		if user == nil {
-			s.tm.RenderError(w, http.StatusUnauthorized, nil)
-			return
-		}
-
 		jamURL := chi.URLParam(r, "jamURL")
 		gameURL := chi.URLParam(r, "gameURL")
 
-		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
+		jam, err := s.gameJams.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
 		}
 
-		game, err := s.service.GetGame(r.Context(), jamURL, gameURL)
+		game, err := s.gameJams.GetGame(r.Context(), jamURL, gameURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusNotFound, err)
+			return
+		}
+
+		user := s.authedUser(r)
+		isOwner, err := s.gameJams.IsGameOwner(r.Context(), *game, user)
+		if err != nil {
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
+			return
+		}
+		if !isOwner {
+			s.tm.RenderError(w, http.StatusUnauthorized, nil)
 			return
 		}
 
@@ -166,19 +170,23 @@ func (s *server) gameEditHandlerPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const pageName = "game_edit_form"
 
-		// TODO: check if user is owner of game
+		jamURL := chi.URLParam(r, "jamURL")
+		gameURL := chi.URLParam(r, "gameURL")
+
 		user := s.authedUser(r)
-		if user == nil {
+		isOwner, err := s.gameJams.IsGameOwnerByURL(r.Context(), jamURL, gameURL, user)
+		if err != nil {
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
+			return
+		}
+		if !isOwner {
 			s.tm.RenderError(w, http.StatusUnauthorized, nil)
 			return
 		}
 
-		jamURL := chi.URLParam(r, "jamURL")
-		gameURL := chi.URLParam(r, "gameURL")
-
 		game, err := s.parseGameForm(r)
 
-		validationErrors, err := s.service.UpdateGame(r.Context(), jamURL, gameURL, *game)
+		validationErrors, err := s.gameJams.UpdateGame(r.Context(), jamURL, gameURL, *game)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
@@ -188,7 +196,7 @@ func (s *server) gameEditHandlerPost() http.HandlerFunc {
 			http.Redirect(w, r, "/jams/"+jamURL+"/games/"+gameURL, http.StatusSeeOther)
 		}
 
-		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
+		jam, err := s.gameJams.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
@@ -204,7 +212,7 @@ func (s *server) gameBanHandlerGet() http.HandlerFunc {
 		jamURL := chi.URLParam(r, "jamURL")
 		gameURL := chi.URLParam(r, "gameURL")
 
-		err := s.service.BanGame(r.Context(), jamURL, gameURL)
+		err := s.gameJams.BanGame(r.Context(), jamURL, gameURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return

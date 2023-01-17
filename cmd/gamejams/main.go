@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"GameJamPlatform/internal/log"
-	"GameJamPlatform/internal/services/gamejams"
+	"GameJamPlatform/internal/services/gamejammanager"
 	"GameJamPlatform/internal/services/sessionprovider"
-	"GameJamPlatform/internal/services/users"
+	"GameJamPlatform/internal/services/usersmanager"
 	"GameJamPlatform/internal/storages"
 	"GameJamPlatform/internal/web/servers"
 	"GameJamPlatform/internal/web/templatemanager"
@@ -37,11 +37,11 @@ func main() {
 		log.Panic(err, "failed to create server config")
 	}
 
-	u := users.NewUsers(repo)
+	u := usersmanager.NewUsers(repo)
 
 	sp := sessionprovider.NewProvider(repo)
 
-	service := gamejams.NewService(repo)
+	service := gamejammanager.NewService(repo)
 	server := servers.NewServer(service, tm, u, sp, serverConfig)
 	err = server.Run()
 	if err != nil {

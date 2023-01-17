@@ -59,7 +59,7 @@ func (s *server) jamsListHandlerGet() http.HandlerFunc {
 
 		user := s.authedUser(r)
 
-		jams, err := s.service.GetJams(r.Context())
+		jams, err := s.gameJams.GetJams(r.Context())
 		if err != nil {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
@@ -106,7 +106,7 @@ func (s *server) jamNewHandlerPost() http.HandlerFunc {
 			return
 		}
 
-		validationErrors, err = s.service.CreateJam(r.Context(), *jam)
+		validationErrors, err = s.gameJams.CreateJam(r.Context(), *user, *jam)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
@@ -129,7 +129,7 @@ func (s *server) jamOverviewHandlerGet() http.HandlerFunc {
 
 		jamURL := chi.URLParam(r, "jamURL")
 
-		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
+		jam, err := s.gameJams.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
@@ -144,13 +144,6 @@ func (s *server) jamEditHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const pageName = "jam_edit_form"
 
-		// TODO: check if user is host of jam
-		user := s.authedUser(r)
-		if user == nil {
-			s.tm.RenderError(w, http.StatusUnauthorized, nil)
-			return
-		}
-
 		jamIDText := chi.URLParam(r, "jamID")
 		jamID, err := strconv.Atoi(jamIDText)
 		if err != nil {
@@ -158,9 +151,20 @@ func (s *server) jamEditHandlerGet() http.HandlerFunc {
 			return
 		}
 
-		jam, err := s.service.GetJamByID(r.Context(), jamID)
+		jam, err := s.gameJams.GetJamByID(r.Context(), jamID)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusNotFound, err)
+			return
+		}
+
+		user := s.authedUser(r)
+		isHost, err := s.gameJams.IsHost(r.Context(), *jam, user)
+		if err != nil {
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
+			return
+		}
+		if !isHost {
+			s.tm.RenderError(w, http.StatusUnauthorized, nil)
 			return
 		}
 
@@ -173,17 +177,21 @@ func (s *server) jamEditHandlerPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const pageName = "jam_edit_form"
 
-		// TODO: check if user is host of jam
-		user := s.authedUser(r)
-		if user == nil {
-			s.tm.RenderError(w, http.StatusUnauthorized, nil)
-			return
-		}
-
 		jamIDText := chi.URLParam(r, "jamID")
 		jamID, err := strconv.Atoi(jamIDText)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		user := s.authedUser(r)
+		isHost, err := s.gameJams.IsHostByID(r.Context(), jamID, user)
+		if err != nil {
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
+			return
+		}
+		if !isHost {
+			s.tm.RenderError(w, http.StatusUnauthorized, nil)
 			return
 		}
 
@@ -198,7 +206,7 @@ func (s *server) jamEditHandlerPost() http.HandlerFunc {
 			return
 		}
 
-		validationErrors, err = s.service.UpdateJam(r.Context(), jamID, *jam)
+		validationErrors, err = s.gameJams.UpdateJam(r.Context(), jamID, *jam)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
@@ -215,13 +223,6 @@ func (s *server) jamEditHandlerPost() http.HandlerFunc {
 
 func (s *server) jamDeleteHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: check if user is host of jam
-		user := s.authedUser(r)
-		if user == nil {
-			s.tm.RenderError(w, http.StatusUnauthorized, nil)
-			return
-		}
-
 		jamIDText := chi.URLParam(r, "jamID")
 		jamID, err := strconv.Atoi(jamIDText)
 		if err != nil {
@@ -229,7 +230,18 @@ func (s *server) jamDeleteHandlerGet() http.HandlerFunc {
 			return
 		}
 
-		err = s.service.DeleteJam(r.Context(), jamID)
+		user := s.authedUser(r)
+		isHost, err := s.gameJams.IsHostByID(r.Context(), jamID, user)
+		if err != nil {
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
+			return
+		}
+		if !isHost {
+			s.tm.RenderError(w, http.StatusUnauthorized, nil)
+			return
+		}
+
+		err = s.gameJams.DeleteJam(r.Context(), jamID)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
@@ -247,13 +259,13 @@ func (s *server) jamEntriesHandlerGet() http.HandlerFunc {
 
 		jamURL := chi.URLParam(r, "jamURL")
 
-		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
+		jam, err := s.gameJams.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
 		}
 
-		games, err := s.service.GetGames(r.Context(), jamURL)
+		games, err := s.gameJams.GetGames(r.Context(), jamURL)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return

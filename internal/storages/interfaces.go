@@ -15,11 +15,13 @@ type Repo interface {
 	GetJamID(ctx context.Context, jamURL string) (int, error)
 	GetJam(ctx context.Context, jamID int) (*gamejams.GameJam, error)
 	GetJams(ctx context.Context) ([]gamejams.GameJam, error)
+	GetJamsByUserID(ctx context.Context, userID int) ([]gamejams.GameJam, error)
 
 	CreateGame(ctx context.Context, game gamejams.Game) error
 	GetGame(ctx context.Context, jamID int, gameURL string) (*gamejams.Game, error)
 	UpdateGame(ctx context.Context, game gamejams.Game) error
 	GetGames(ctx context.Context, gameJamID int) ([]gamejams.Game, error)
+	GetGamesByUserID(ctx context.Context, userID int) ([]gamejams.Game, error)
 	DeleteGame(ctx context.Context, gameID int) error
 	BanGame(ctx context.Context, jamID int, gameID string) error
 

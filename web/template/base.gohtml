@@ -24,6 +24,9 @@
             <div class="navbar-end">
                 {{ if .IsAuth }}
                 <div class="navbar-item">
+                    <p><strong>{{ .User.Username}}</strong></p>
+                </div>
+                <div class="navbar-item">
                     <div class="buttons">
                         <a class="button is-primary" href="/users/{{ .User.Username}}">
                             <strong>Profile</strong>

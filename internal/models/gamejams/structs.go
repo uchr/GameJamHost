@@ -3,7 +3,8 @@ package gamejams
 import "time"
 
 type GameJam struct {
-	ID int
+	ID     int
+	UserID int // TODO: Multiple hosts
 
 	Title   string
 	URL     string
@@ -22,6 +23,7 @@ type GameJam struct {
 type Game struct {
 	ID        int
 	GameJamID int
+	UserID    int // TODO: Multiple authors (team)
 
 	Title   string
 	URL     string
@@ -32,4 +34,15 @@ type Game struct {
 
 	CoverImageURL  string
 	ScreenshotURLs []string
+}
+
+type JamHost struct {
+	ID        int
+	GameJamID int
+	UserID    int
+}
+
+type JamHostInvite struct {
+	UID       string
+	GameJamID int
 }

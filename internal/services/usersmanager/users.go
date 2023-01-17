@@ -1,7 +1,8 @@
-package users
+package usersmanager
 
 import (
 	"context"
+	"errors"
 
 	usersModel "GameJamPlatform/internal/models/users"
 	"GameJamPlatform/internal/storages"
@@ -26,15 +27,36 @@ func (u *users) CreateUser(ctx context.Context, user usersModel.User, password s
 }
 
 func (u *users) GetUserByID(ctx context.Context, userID int) (*usersModel.User, error) {
-	return u.repo.GetUserByID(ctx, userID)
+	user, err := u.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, storages.ErrNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return user, nil
 }
 
 func (u *users) GetUserByUsername(ctx context.Context, username string) (*usersModel.User, error) {
-	return u.repo.GetUserByUsername(ctx, username)
+	user, err := u.repo.GetUserByUsername(ctx, username)
+	if err != nil {
+		if errors.Is(err, storages.ErrNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return user, nil
 }
 
 func (u *users) GetUserByEmail(ctx context.Context, email string) (*usersModel.User, error) {
-	return u.repo.GetUserByEmail(ctx, email)
+	user, err := u.repo.GetUserByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, storages.ErrNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return user, nil
 }
 
 func (u *users) UpdateUser(ctx context.Context, user usersModel.User) error {

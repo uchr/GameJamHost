@@ -53,7 +53,13 @@ func (s *server) userNewHandlerPost() http.HandlerFunc {
 			return
 		}
 
-		err = s.authorize(w, r, user.ID)
+		user, err = s.users.GetUserByUsername(r.Context(), user.Username)
+		if err != nil {
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
+			return
+		}
+
+		err = s.login(w, r, user.ID)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
@@ -86,7 +92,8 @@ func (s *server) logoutHandlerGet() http.HandlerFunc {
 		}
 
 		if session != nil {
-			if err := s.sessionProvider.Delete(r.Context(), session.UID); err != nil {
+			err := s.logout(w, r, *session)
+			if err != nil {
 				s.tm.RenderError(w, http.StatusInternalServerError, err)
 				return
 			}
@@ -128,7 +135,7 @@ func (s *server) loginHandlerPost() http.HandlerFunc {
 			return
 		}
 
-		err = s.authorize(w, r, user.ID)
+		err = s.login(w, r, user.ID)
 		if err != nil {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
