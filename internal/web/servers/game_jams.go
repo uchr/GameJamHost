@@ -7,9 +7,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"GameJamPlatform/internal/forms"
 	"GameJamPlatform/internal/models/gamejams"
-	"GameJamPlatform/internal/templates"
+	"GameJamPlatform/internal/web/forms"
+	"GameJamPlatform/internal/web/pagedata"
 )
 
 func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, forms.ValidationErrors, error) {
@@ -53,59 +53,67 @@ func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, forms.Validat
 	return &jam, validationErrors, nil
 }
 
-func (s *server) jamsListHandler() http.HandlerFunc {
+func (s *server) jamsListHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		const pageName = "jam_list"
+
+		user := s.authedUser(r)
+
 		jams, err := s.service.GetJams(r.Context())
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		pageData := templates.NewJamListPageData(jams)
-		if err := s.tmpl.JamListTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
-			return
-		}
+		pageData := pagedata.NewJamListPageData(user, jams)
+		s.tm.Render(w, pageName, pageData)
 	}
 }
 
-func (s *server) jamNewHandler() http.HandlerFunc {
+func (s *server) jamNewHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		pageData := templates.NewJamEditFormPageData(true, gamejams.GameJam{}, nil)
-		if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+		const pageName = "jam_edit_form"
+
+		user := s.authedUser(r)
+		if user == nil {
+			s.tm.RenderError(w, http.StatusUnauthorized, nil)
 			return
 		}
+
+		pageData := pagedata.NewJamEditFormPageData(*user, gamejams.GameJam{}, true, nil)
+		s.tm.Render(w, pageName, pageData)
 	}
 }
 
-func (s *server) jamCreateHandler() http.HandlerFunc {
+func (s *server) jamNewHandlerPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		const pageName = "jam_edit_form"
+
+		user := s.authedUser(r)
+		if user == nil {
+			s.tm.RenderError(w, http.StatusUnauthorized, nil)
+			return
+		}
+
 		jam, validationErrors, err := s.parseJamForm(r)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusBadRequest, err)
+			s.tm.RenderError(w, http.StatusBadRequest, err)
 			return
 		}
 		if len(validationErrors) > 0 {
-			pageData := templates.NewJamEditFormPageData(true, *jam, validationErrors)
-			if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
-				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
-				return
-			}
+			pageData := pagedata.NewJamEditFormPageData(*user, *jam, true, validationErrors)
+			s.tm.Render(w, pageName, pageData)
 			return
 		}
 
 		validationErrors, err = s.service.CreateJam(r.Context(), *jam)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 		if len(validationErrors) > 0 {
-			pageData := templates.NewJamEditFormPageData(true, *jam, validationErrors)
-			if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
-				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
-				return
-			}
+			pageData := pagedata.NewJamEditFormPageData(*user, *jam, true, validationErrors)
+			s.tm.Render(w, pageName, pageData)
 			return
 		}
 
@@ -113,83 +121,91 @@ func (s *server) jamCreateHandler() http.HandlerFunc {
 	}
 }
 
-func (s *server) jamOverviewHandler() http.HandlerFunc {
+func (s *server) jamOverviewHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		const pageName = "jam_overview"
+
+		user := s.authedUser(r)
+
 		jamURL := chi.URLParam(r, "jamURL")
 
 		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusNotFound, err)
+			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
 		}
 
-		pageData := templates.NewJamOverviewPageData(*jam)
-		if err := s.tmpl.JamOverviewTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
-			return
-		}
+		pageData := pagedata.NewJamOverviewPageData(user, *jam)
+		s.tm.Render(w, pageName, pageData)
 	}
 }
 
-func (s *server) jamEditHandler() http.HandlerFunc {
+func (s *server) jamEditHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		const pageName = "jam_edit_form"
+
+		// TODO: check if user is host of jam
+		user := s.authedUser(r)
+		if user == nil {
+			s.tm.RenderError(w, http.StatusUnauthorized, nil)
+			return
+		}
+
 		jamIDText := chi.URLParam(r, "jamID")
 		jamID, err := strconv.Atoi(jamIDText)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusBadRequest, err)
+			s.tm.RenderError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		jam, err := s.service.GetJamByID(r.Context(), jamID)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusNotFound, err)
+			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
 		}
 
-		pageData := templates.NewJamEditFormPageData(false, *jam, nil)
-		if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
-			return
-		}
-
-		http.Redirect(w, r, "/jams/"+jam.URL, http.StatusSeeOther)
+		pageData := pagedata.NewJamEditFormPageData(*user, *jam, false, nil)
+		s.tm.Render(w, pageName, pageData)
 	}
 }
 
-func (s *server) jamUpdateHandler() http.HandlerFunc {
+func (s *server) jamEditHandlerPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		const pageName = "jam_edit_form"
+
+		// TODO: check if user is host of jam
+		user := s.authedUser(r)
+		if user == nil {
+			s.tm.RenderError(w, http.StatusUnauthorized, nil)
+			return
+		}
+
 		jamIDText := chi.URLParam(r, "jamID")
 		jamID, err := strconv.Atoi(jamIDText)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusBadRequest, err)
+			s.tm.RenderError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		jam, validationErrors, err := s.parseJamForm(r)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusBadRequest, err)
+			s.tm.RenderError(w, http.StatusBadRequest, err)
 			return
 		}
 		if len(validationErrors) > 0 {
-			pageData := templates.NewJamEditFormPageData(false, *jam, validationErrors)
-			if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
-				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
-				return
-			}
+			pageData := pagedata.NewJamEditFormPageData(*user, *jam, false, validationErrors)
+			s.tm.Render(w, pageName, pageData)
 			return
 		}
 
 		validationErrors, err = s.service.UpdateJam(r.Context(), jamID, *jam)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 		if validationErrors != nil {
-			pageData := templates.NewJamEditFormPageData(false, *jam, validationErrors)
-			if err := s.tmpl.JamEditFormTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
-				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
-				return
-			}
+			pageData := pagedata.NewJamEditFormPageData(*user, *jam, false, validationErrors)
+			s.tm.Render(w, pageName, pageData)
 			return
 		}
 
@@ -197,18 +213,25 @@ func (s *server) jamUpdateHandler() http.HandlerFunc {
 	}
 }
 
-func (s *server) jamDeleteHandler() http.HandlerFunc {
+func (s *server) jamDeleteHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO: check if user is host of jam
+		user := s.authedUser(r)
+		if user == nil {
+			s.tm.RenderError(w, http.StatusUnauthorized, nil)
+			return
+		}
+
 		jamIDText := chi.URLParam(r, "jamID")
 		jamID, err := strconv.Atoi(jamIDText)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusBadRequest, err)
+			s.tm.RenderError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		err = s.service.DeleteJam(r.Context(), jamID)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -216,26 +239,27 @@ func (s *server) jamDeleteHandler() http.HandlerFunc {
 	}
 }
 
-func (s *server) jamEntriesHandler() http.HandlerFunc {
+func (s *server) jamEntriesHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		const pageName = "jam_entries"
+
+		user := s.authedUser(r)
+
 		jamURL := chi.URLParam(r, "jamURL")
 
 		jam, err := s.service.GetJamByURL(r.Context(), jamURL)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusNotFound, err)
+			s.tm.RenderError(w, http.StatusNotFound, err)
 			return
 		}
 
 		games, err := s.service.GetGames(r.Context(), jamURL)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		pageData := templates.NewJamEntriesPageData(*jam, games)
-		if err := s.tmpl.JamEntriesTemplate.ExecuteTemplate(w, "base", pageData); err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
-			return
-		}
+		pageData := pagedata.NewJamEntriesPageData(user, *jam, games)
+		s.tm.Render(w, pageName, pageData)
 	}
 }

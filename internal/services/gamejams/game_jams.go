@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
-	"GameJamPlatform/internal/forms"
 	"GameJamPlatform/internal/models/gamejams"
+	"GameJamPlatform/internal/web/forms"
 )
 
 func (sr *Service) validateJam(ctx context.Context, jam gamejams.GameJam) (forms.ValidationErrors, error) {

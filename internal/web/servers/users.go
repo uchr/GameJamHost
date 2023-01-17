@@ -26,31 +26,36 @@ func (s *server) parseRegistrationForm(r *http.Request) (*users.User, string, er
 	return &user, password, nil
 }
 
-func (s *server) userNewHandler() http.HandlerFunc {
+func (s *server) userNewHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := s.tmpl.UserRegistrationTemplate.ExecuteTemplate(w, "base", nil); err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+		const pageName = "user_registration"
+
+		user := s.authedUser(r)
+		if user != nil {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
+
+		s.tm.Render(w, pageName, nil)
 	}
 }
 
-func (s *server) userCreateHandler() http.HandlerFunc {
+func (s *server) userNewHandlerPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, password, err := s.parseRegistrationForm(r)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusBadRequest, err)
+			s.tm.RenderError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		if err := s.users.CreateUser(r.Context(), *user, password); err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 
 		err = s.authorize(w, r, user.ID)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 
@@ -58,26 +63,31 @@ func (s *server) userCreateHandler() http.HandlerFunc {
 	}
 }
 
-func (s *server) loginHandler() http.HandlerFunc {
+func (s *server) loginHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := s.tmpl.UserLoginTemplate.ExecuteTemplate(w, "base", nil); err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+		const pageName = "user_login"
+
+		user := s.authedUser(r)
+		if user != nil {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
 		}
+
+		s.tm.Render(w, pageName, nil)
 	}
 }
 
-func (s *server) logoutHandler() http.HandlerFunc {
+func (s *server) logoutHandlerGet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, err := s.isAuthorized(r)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 
 		if session != nil {
 			if err := s.sessionProvider.Delete(r.Context(), session.UID); err != nil {
-				s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+				s.tm.RenderError(w, http.StatusInternalServerError, err)
 				return
 			}
 		}
@@ -86,10 +96,10 @@ func (s *server) logoutHandler() http.HandlerFunc {
 	}
 }
 
-func (s *server) authHandler() http.HandlerFunc {
+func (s *server) loginHandlerPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseForm(); err != nil {
-			s.executeErrorPage(w, r, http.StatusBadRequest, err)
+			s.tm.RenderError(w, http.StatusBadRequest, err)
 			return
 		}
 
@@ -98,29 +108,29 @@ func (s *server) authHandler() http.HandlerFunc {
 
 		user, err := s.users.GetUserByUsername(r.Context(), username)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 
 		if user == nil {
-			s.executeErrorPage(w, r, http.StatusUnauthorized, ErrFailedAuth)
+			s.tm.RenderError(w, http.StatusUnauthorized, ErrFailedAuth)
 			return
 		}
 
 		ok, err := s.users.CheckPassword(r.Context(), username, password)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 
 		if !ok {
-			s.executeErrorPage(w, r, http.StatusUnauthorized, ErrFailedAuth)
+			s.tm.RenderError(w, http.StatusUnauthorized, ErrFailedAuth)
 			return
 		}
 
 		err = s.authorize(w, r, user.ID)
 		if err != nil {
-			s.executeErrorPage(w, r, http.StatusInternalServerError, err)
+			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 

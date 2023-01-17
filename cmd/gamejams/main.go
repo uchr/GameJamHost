@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"GameJamPlatform/internal/log"
-	"GameJamPlatform/internal/servers"
 	"GameJamPlatform/internal/services/gamejams"
 	"GameJamPlatform/internal/services/sessionprovider"
 	"GameJamPlatform/internal/services/users"
 	"GameJamPlatform/internal/storages"
-	"GameJamPlatform/internal/templates"
+	"GameJamPlatform/internal/web/servers"
+	"GameJamPlatform/internal/web/templatemanager"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 		log.Panic(err, "failed to create storage")
 	}
 
-	tmpl, err := templates.NewTemplates("web/template")
+	tm, err := templatemanager.NewManager("web/template")
 	if err != nil {
 		log.Panic(err, "failed to create templates")
 	}
@@ -42,7 +42,7 @@ func main() {
 	sp := sessionprovider.NewProvider(repo)
 
 	service := gamejams.NewService(repo)
-	server := servers.NewServer(service, tmpl, u, sp, serverConfig)
+	server := servers.NewServer(service, tm, u, sp, serverConfig)
 	err = server.Run()
 	if err != nil {
 		log.Panic(err, "failed to start server")

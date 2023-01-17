@@ -1,4 +1,4 @@
-package templates
+package pagedata
 
 import (
 	"html/template"

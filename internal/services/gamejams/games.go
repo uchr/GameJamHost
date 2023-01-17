@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"GameJamPlatform/internal/forms"
 	"GameJamPlatform/internal/models/gamejams"
 	"GameJamPlatform/internal/storages"
+	"GameJamPlatform/internal/web/forms"
 )
 
 func init() {

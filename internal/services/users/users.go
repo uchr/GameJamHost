@@ -3,7 +3,7 @@ package users
 import (
 	"context"
 
-	users2 "GameJamPlatform/internal/models/users"
+	usersModel "GameJamPlatform/internal/models/users"
 	"GameJamPlatform/internal/storages"
 )
 
@@ -15,7 +15,7 @@ func NewUsers(repo storages.Repo) *users {
 	return &users{repo: repo}
 }
 
-func (u *users) CreateUser(ctx context.Context, user users2.User, password string) error {
+func (u *users) CreateUser(ctx context.Context, user usersModel.User, password string) error {
 	hash, err := hashPassword(password)
 	if err != nil {
 		return err
@@ -25,19 +25,19 @@ func (u *users) CreateUser(ctx context.Context, user users2.User, password strin
 	return u.repo.CreateUser(ctx, user)
 }
 
-func (u *users) GetUserByID(ctx context.Context, userID int) (*users2.User, error) {
+func (u *users) GetUserByID(ctx context.Context, userID int) (*usersModel.User, error) {
 	return u.repo.GetUserByID(ctx, userID)
 }
 
-func (u *users) GetUserByUsername(ctx context.Context, username string) (*users2.User, error) {
+func (u *users) GetUserByUsername(ctx context.Context, username string) (*usersModel.User, error) {
 	return u.repo.GetUserByUsername(ctx, username)
 }
 
-func (u *users) GetUserByEmail(ctx context.Context, email string) (*users2.User, error) {
+func (u *users) GetUserByEmail(ctx context.Context, email string) (*usersModel.User, error) {
 	return u.repo.GetUserByEmail(ctx, email)
 }
 
-func (u *users) UpdateUser(ctx context.Context, user users2.User) error {
+func (u *users) UpdateUser(ctx context.Context, user usersModel.User) error {
 	if user.Password != nil {
 		hash, err := hashPassword(string(user.Password))
 		if err != nil {

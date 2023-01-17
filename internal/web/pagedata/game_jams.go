@@ -1,10 +1,11 @@
-package templates
+package pagedata
 
 import (
 	"html/template"
 
-	"GameJamPlatform/internal/forms"
 	"GameJamPlatform/internal/models/gamejams"
+	"GameJamPlatform/internal/models/users"
+	"GameJamPlatform/internal/web/forms"
 )
 
 type JamListPageData struct {
@@ -13,8 +14,12 @@ type JamListPageData struct {
 	Jams []gamejams.GameJam
 }
 
-func NewJamListPageData(jams []gamejams.GameJam) JamListPageData {
-	return JamListPageData{Jams: jams}
+func NewJamListPageData(user *users.User, jams []gamejams.GameJam) JamListPageData {
+	return JamListPageData{
+		AuthPageData: NewAuthPageData(user),
+
+		Jams: jams,
+	}
 }
 
 type JamOverviewPageData struct {
@@ -25,8 +30,13 @@ type JamOverviewPageData struct {
 	RenderedContent template.HTML
 }
 
-func NewJamOverviewPageData(jam gamejams.GameJam) JamOverviewPageData {
-	return JamOverviewPageData{Jam: jam, RenderedContent: renderContent(jam.Content)}
+func NewJamOverviewPageData(users *users.User, jam gamejams.GameJam) JamOverviewPageData {
+	return JamOverviewPageData{
+		AuthPageData: NewAuthPageData(users),
+
+		Jam:             jam,
+		RenderedContent: renderContent(jam.Content),
+	}
 }
 
 type JamEditFormPageData struct {
@@ -42,8 +52,10 @@ type JamEditFormPageData struct {
 	VotingEndDate string
 }
 
-func NewJamEditFormPageData(isNewJam bool, jam gamejams.GameJam, validationErrors forms.ValidationErrors) JamEditFormPageData {
+func NewJamEditFormPageData(user users.User, jam gamejams.GameJam, isNewJam bool, validationErrors forms.ValidationErrors) JamEditFormPageData {
 	pageData := JamEditFormPageData{
+		AuthPageData: NewAuthPageData(&user),
+
 		IsNewJam: isNewJam,
 		Jam:      jam,
 		Errors:   validationErrors,
@@ -69,6 +81,11 @@ type JamEntriesPageData struct {
 	Games []gamejams.Game
 }
 
-func NewJamEntriesPageData(jam gamejams.GameJam, games []gamejams.Game) JamEntriesPageData {
-	return JamEntriesPageData{Jam: jam, Games: games}
+func NewJamEntriesPageData(users *users.User, jam gamejams.GameJam, games []gamejams.Game) JamEntriesPageData {
+	return JamEntriesPageData{
+		AuthPageData: NewAuthPageData(users),
+
+		Jam:   jam,
+		Games: games,
+	}
 }
