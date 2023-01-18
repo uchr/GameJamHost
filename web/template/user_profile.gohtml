@@ -1,40 +1,40 @@
 {{define "content"}}
-<div class="content">
-    <h1 class="title is-1">{{.User.Username}}</h1>
+    <div class="content">
+        <h1 class="title is-1">{{.User.Username}}</h1>
 
-    {{ if eq .ProfileUser.ID .User.ID }}
-    <a href="/users/{{.User.Username}}/edit" class="button is-small is-link">Edit</a>
-    {{ end }}
+        {{ if eq .ProfileUser.ID .User.ID }}
+            <a href="/users/{{.User.Username}}/edit" class="button is-small is-link">Edit</a>
+        {{ end }}
 
-    <h2>About</h2>
-    {{.RenderedAbout}}
+        <h2>About</h2>
+        {{.RenderedAbout}}
 
-    <h2>Jams</h2>
-    <ul>
+        <h2>Jams</h2>
         {{ if .Jams}}
-            {{range .Jams}}
-            <li>
-                <a href="jams/{{.URL}}">{{.Title}}</a>
-            </li>
-            {{end}}
+            <ul>
+                {{range .Jams}}
+                    <li>
+                        <a href="/jams/{{.URL}}">{{.Title}}</a>
+                    </li>
+                {{end}}
+            </ul>
         {{ else }}
-            <li>No jams yet</li>
+            <p>No jams yet</p>
         {{ end }}
-    </ul>
 
-    <h2>Games</h2>
-    <ul>
+        <h2>Games</h2>
         {{ if .Games}}
-            {{ range .Games }}
-            <li>
-                <a href="/jams/{{$.Jam.URL}}/games/{{.URL}}">{{.Title}}</a>
-            </li>
-            {{ end }}
+            <ul>
+                {{ range .Games }}
+                    <li>
+                        <a href="/jams/{{(index $.JamURLs .JamID)}}/games/{{.URL}}">{{.Title}}</a>
+                    </li>
+                {{ end }}
+            </ul>
         {{ else }}
-            <li>No games yet</li>
+            <p>No games yet</p>
         {{ end }}
-    </ul>
 
-</div>
+    </div>
 
 {{end}}

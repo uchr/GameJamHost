@@ -21,9 +21,9 @@ type GameJam struct {
 }
 
 type Game struct {
-	ID        int
-	GameJamID int
-	UserID    int // TODO: Multiple authors (team)
+	ID     int
+	JamID  int
+	UserID int // TODO: Multiple authors (team)
 
 	Title   string
 	URL     string

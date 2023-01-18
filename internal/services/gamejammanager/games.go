@@ -97,7 +97,8 @@ func (jm *gameJamManager) CreateGame(ctx context.Context, jamURL string, user us
 		return "", nil, err
 	}
 
-	game.GameJamID = jamID
+	game.Title = strings.TrimSpace(game.Title)
+	game.JamID = jamID
 	game.URL, err = jm.generateGameUrl(ctx, jamID, game.Title)
 	game.UserID = user.ID
 	if err != nil {
@@ -188,7 +189,7 @@ func (jm *gameJamManager) IsGameOwnerByURL(ctx context.Context, jamURL string, g
 	if user == nil {
 		return false, nil
 	}
-	
+
 	jamID, err := jm.repo.GetJamID(ctx, jamURL)
 	if err != nil {
 		return false, err

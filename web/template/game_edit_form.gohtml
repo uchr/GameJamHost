@@ -1,10 +1,18 @@
 {{define "content"}}
-{{ if .IsNewGame }}
-<h1 class="title"> New Game Entry for {{.Jam.Title}} </h1>
-{{else}}
-<h1 class="title"> Edit {{.Game.Title}} </h1>
-{{end}}
-
+<div class="content">
+    {{ if .IsNewGame }}
+        <h1 class="title is-1"> New Game Entry for {{.Jam.Title}} </h1>
+    {{else}}
+        <h1 class="title is-1">{{.Game.Title}}</h1>
+        <p>Submissions for <a href="/jams/{{.Jam.URL}}">{{.Jam.Title}}</a></p>
+    {{end}}
+</div>
+<div class="tabs">
+    <ul>
+        <li><a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}">Overview</a></li>
+        <li class="is-active"><a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit">Edit</a></li>
+    </ul>
+</div>
 <form enctype="multipart/form-data"  action="{{ if .IsNewGame }}/jams/{{.Jam.URL}}/game/new{{else}}/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit{{end}}" method="POST">
     <div class="field">
         <label class="label">Title</label>

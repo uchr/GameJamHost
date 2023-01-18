@@ -1,29 +1,37 @@
 {{define "content"}}
-<div class="content">
-    <h1 class="title is-1">{{.Game.Title}}</h1>
-    <p>Submissions for <a href="/jams/{{.Jam.URL}}">{{.Jam.Title}}</a></p>
-
-    <p>
-        <a href="{{.Game.Build}}" class="button is-link">Download</a>
-    </p>
-
-    {{ if .Game.CoverImageURL }}
-    <img src="/static/user_images/{{.Game.CoverImageURL}}" alt="Cover image" />
+    <div class="content">
+        <h1 class="title is-1">{{.Game.Title}}</h1>
+        <p>Submissions for <a href="/jams/{{.Jam.URL}}">{{.Jam.Title}}</a></p>
+    </div>
+    {{ if .IsAuth }}
+        {{ if eq .Game.UserID .User.ID }}
+            <div class="tabs">
+                <ul>
+                    <li class="is-active"><a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}">Overview</a></li>
+                    <li><a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit">Edit</a></li>
+                </ul>
+            </div>
+        {{ end }}
     {{ end }}
-    {{ if gt (len .Game.ScreenshotURLs) 0 }}
-    <img src="/static/user_images/{{index .Game.ScreenshotURLs 0}}" alt="Screenshot 1" />
-    {{ end }}
-    {{ if gt (len .Game.ScreenshotURLs) 1 }}
-    <img src="/static/user_images/{{index .Game.ScreenshotURLs 1}}" alt="Screenshot 2" />
-    {{ end }}
-    {{ if gt (len .Game.ScreenshotURLs) 2 }}
-    <img src="/static/user_images/{{index .Game.ScreenshotURLs 2}}" alt="Screenshot 3" />
-    {{ end }}
+    <div class="content">
+        <div class="has-text-centered">
+            <a href="{{.Game.Build}}" class="button is-link">Download</a>
+        </div>
 
-    {{.RenderedContent}}
+        {{ if .Game.CoverImageURL }}
+            <img src="/static/user_images/{{.Game.CoverImageURL}}" alt="Cover image"/>
+        {{ end }}
+        {{ if gt (len .Game.ScreenshotURLs) 0 }}
+            <img src="/static/user_images/{{index .Game.ScreenshotURLs 0}}" alt="Screenshot 1"/>
+        {{ end }}
+        {{ if gt (len .Game.ScreenshotURLs) 1 }}
+            <img src="/static/user_images/{{index .Game.ScreenshotURLs 1}}" alt="Screenshot 2"/>
+        {{ end }}
+        {{ if gt (len .Game.ScreenshotURLs) 2 }}
+            <img src="/static/user_images/{{index .Game.ScreenshotURLs 2}}" alt="Screenshot 3"/>
+        {{ end }}
 
-    <a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit" class="button is-link">Edit</a>
-
-</div>
+        {{.RenderedContent}}
+    </div>
 
 {{end}}

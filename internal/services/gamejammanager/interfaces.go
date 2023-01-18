@@ -17,6 +17,7 @@ type GameJamManager interface {
 	GetJamByID(ctx context.Context, jamID int) (*gamejams.GameJam, error)
 	UpdateJam(ctx context.Context, jamID int, jam gamejams.GameJam) (forms.ValidationErrors, error)
 	JamEntries(ctx context.Context, jamURL string) ([]gamejams.Game, error)
+	// GetUserGame(ctx context.Context, user users.User, jamURL string) (gamejams.Game, error) // TODO: Implement for Jam Overview page
 	IsHost(ctx context.Context, jam gamejams.GameJam, user *users.User) (bool, error)
 	IsHostByID(ctx context.Context, jamID int, user *users.User) (bool, error)
 

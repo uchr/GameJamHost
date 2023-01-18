@@ -25,6 +25,7 @@ func NewJamListPageData(user *users.User, jams []gamejams.GameJam) JamListPageDa
 type JamOverviewPageData struct {
 	AuthPageData
 
+	// UserGameURL string TODO: Hide submit button if user has already submitted a game
 	Jam gamejams.GameJam
 
 	RenderedContent template.HTML
@@ -34,7 +35,8 @@ func NewJamOverviewPageData(users *users.User, jam gamejams.GameJam) JamOverview
 	return JamOverviewPageData{
 		AuthPageData: NewAuthPageData(users),
 
-		Jam:             jam,
+		Jam: jam,
+
 		RenderedContent: renderContent(jam.Content),
 	}
 }

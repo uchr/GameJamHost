@@ -31,6 +31,7 @@ func NewGameEditFormPageData(user users.User, jam gamejams.GameJam, game gamejam
 
 type GameOverviewPageData struct {
 	AuthPageData
+
 	Jam  gamejams.GameJam
 	Game gamejams.Game
 

@@ -197,7 +197,17 @@ func (s *server) userProfileHandlerGet() http.HandlerFunc {
 			return
 		}
 
-		pageData := pagedata.NewUserProfilePageData(authedUser, *profileUser, jams, games)
+		jamURLs := make(map[int]string)
+		for _, game := range games {
+			jam, err := s.gameJams.GetJamByID(r.Context(), game.JamID)
+			if err != nil {
+				s.tm.RenderError(w, http.StatusInternalServerError, err)
+				return
+			}
+			jamURLs[jam.ID] = jam.URL
+		}
+
+		pageData := pagedata.NewUserProfilePageData(authedUser, *profileUser, jams, games, jamURLs)
 		s.tm.Render(w, pageName, pageData)
 	}
 }
