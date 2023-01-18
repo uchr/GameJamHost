@@ -82,9 +82,9 @@ func (s *server) Run() error {
 		r.Post("/user/login", s.loginHandlerPost())
 		r.Get("/user/logout", s.logoutHandlerGet())
 
-		//r.Get("/users/{username}", s.userProfileHandler())
-		//r.Get("/users/{username}/edit", s.userEditHandler())
-		//r.Post("/users/{username}/edit", s.userUpdateHandler())
+		r.Get("/users/{username}", s.userProfileHandlerGet())
+		r.Get("/users/{username}/edit", s.userEditHandlerGet())
+		r.Post("/users/{username}/edit", s.userEditHandlerPost())
 
 		//r.Get("/jams/{jamURL}/results", s.jamResultsHandler())
 

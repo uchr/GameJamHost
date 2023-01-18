@@ -1,0 +1,40 @@
+{{define "content"}}
+<div class="content">
+    <h1 class="title is-1">{{.User.Username}}</h1>
+
+    {{ if eq .ProfileUser.ID .User.ID }}
+    <a href="/users/{{.User.Username}}/edit" class="button is-small is-link">Edit</a>
+    {{ end }}
+
+    <h2>About</h2>
+    {{.RenderedAbout}}
+
+    <h2>Jams</h2>
+    <ul>
+        {{ if .Jams}}
+            {{range .Jams}}
+            <li>
+                <a href="jams/{{.URL}}">{{.Title}}</a>
+            </li>
+            {{end}}
+        {{ else }}
+            <li>No jams yet</li>
+        {{ end }}
+    </ul>
+
+    <h2>Games</h2>
+    <ul>
+        {{ if .Games}}
+            {{ range .Games }}
+            <li>
+                <a href="/jams/{{$.Jam.URL}}/games/{{.URL}}">{{.Title}}</a>
+            </li>
+            {{ end }}
+        {{ else }}
+            <li>No games yet</li>
+        {{ end }}
+    </ul>
+
+</div>
+
+{{end}}

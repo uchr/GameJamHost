@@ -23,5 +23,5 @@ type UserManager interface {
 	GetUserByEmail(ctx context.Context, email string) (*usersModel.User, error)
 
 	// UpdateUser updates user in the database.
-	UpdateUser(ctx context.Context, user usersModel.User) error
+	UpdateUser(ctx context.Context, user usersModel.User, password string) error
 }

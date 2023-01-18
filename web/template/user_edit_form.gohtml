@@ -1,24 +1,8 @@
 {{define "content"}}
 <h1 class="title"> Registration </h1>
 
-<form action="/user/new" method="POST">
+<form action="/users/{{.User.Username}}/edit" method="POST">
     <div class="field">
-        <label class="label">Username</label>
-        <div class="control">
-            {{ if .Errors.Username }}
-            <p class="help is-danger">{{ .Errors.Username }}</p>
-            {{ end }}
-            <input class="input" id="name"  name="username" type="text" placeholder="Text input">
-        </div>
-
-        <label class="label">Email</label>
-        <div class="control">
-            {{ if .Errors.Email }}
-            <p class="help is-danger">{{ .Errors.Email }}</p>
-            {{ end }}
-            <input class="input" id="build" name="email" type="text" placeholder="Text input">
-        </div>
-
         <label class="label">Password</label>
         <div class="control">
             {{ if .Errors.Password }}
@@ -40,12 +24,15 @@
             {{ if .Errors.About }}
             <p class="help is-danger">{{ .Errors.About }}</p>
             {{ end }}
-            <textarea class="textarea" name="about" placeholder="About" rows="20"></textarea>
+            <textarea class="textarea" name="about" placeholder="About" rows="20">{{.User.About}}</textarea>
         </div>
     </div>
 
     <div class="field">
         <div class="control">
+            {{ if .User.AvatarURL }}
+            <img src="/static/user_images/{{.User.AvatarURL}}" alt="Avatar image" />
+            {{ end }}
             <label class="label">Avatar image</label>
             <input type="file" name="avatar_image" />
         </div>
@@ -53,7 +40,7 @@
 
     <div class="field">
         <div class="control">
-            <button type="submit" class="button is-link">Register</button>
+            <button type="submit" class="button is-link">Save</button>
         </div>
     </div>
 </form>

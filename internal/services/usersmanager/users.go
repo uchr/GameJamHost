@@ -59,16 +59,27 @@ func (u *users) GetUserByEmail(ctx context.Context, email string) (*usersModel.U
 	return user, nil
 }
 
-func (u *users) UpdateUser(ctx context.Context, user usersModel.User) error {
-	if user.Password != nil {
-		hash, err := hashPassword(string(user.Password))
+func (u *users) UpdateUser(ctx context.Context, user usersModel.User, password string) error {
+	prevUser, err := u.repo.GetUserByID(ctx, user.ID)
+	if err != nil {
+		return nil
+	}
+
+	if password != "" {
+		hash, err := hashPassword(password)
 		if err != nil {
 			return err
 		}
-		user.Password = hash
+		prevUser.Password = hash
+	}
+	if user.About != "" {
+		prevUser.About = user.About
+	}
+	if user.AvatarURL != "" {
+		prevUser.AvatarURL = user.AvatarURL
 	}
 
-	return u.repo.UpdateUser(ctx, user)
+	return u.repo.UpdateUser(ctx, *prevUser)
 }
 
 func (u *users) CheckPassword(ctx context.Context, username, password string) (bool, error) {

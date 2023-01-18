@@ -54,6 +54,12 @@ func NewManager(templateFolder string) (*templateManager, error) {
 	if err := tm.loadTemplate("user_login"); err != nil {
 		return nil, err
 	}
+	if err := tm.loadTemplate("user_profile"); err != nil {
+		return nil, err
+	}
+	if err := tm.loadTemplate("user_edit_form"); err != nil {
+		return nil, err
+	}
 
 	return &tm, nil
 }
@@ -71,7 +77,9 @@ func (tm *templateManager) Render(wr io.Writer, name string, data interface{}) {
 }
 
 func (tm *templateManager) RenderError(wr io.Writer, errorCode int, err error) {
-	log.Error(err)
+	if err != nil {
+		log.Error(err)
+	}
 	tm.Render(wr, "error", pagedata.NewErrorPageData(errorCode, err))
 }
 
