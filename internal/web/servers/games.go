@@ -1,12 +1,15 @@
 package servers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
 	"GameJamPlatform/internal/models/gamejams"
+	"GameJamPlatform/internal/models/users"
+	"GameJamPlatform/internal/services/validationerr"
 	"GameJamPlatform/internal/web/pagedata"
 )
 
@@ -69,8 +72,6 @@ func (s *server) gameNewHandlerGet() http.HandlerFunc {
 
 func (s *server) gameNewHandlerPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const pageName = "game_edit_form"
-
 		user := s.authedUser(r)
 		if user == nil {
 			s.tm.RenderError(w, http.StatusUnauthorized, nil)
@@ -85,23 +86,20 @@ func (s *server) gameNewHandlerPost() http.HandlerFunc {
 			return
 		}
 
-		gameURL, validationErrors, err := s.gameJams.CreateGame(r.Context(), jamURL, *user, *game)
-		if err != nil {
+		gameURL, err := s.gameJams.CreateGame(r.Context(), jamURL, *user, *game)
+		if err == nil {
+			http.Redirect(w, r, "/jams/"+jamURL+"/games/"+gameURL, http.StatusSeeOther)
+			return
+		}
+
+		var vErr validationerr.ValidationErrors
+		if !errors.As(err, &vErr) {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
-		if len(validationErrors) == 0 {
-			http.Redirect(w, r, "/jams/"+jamURL+"/games/"+gameURL, http.StatusSeeOther)
-		}
 
-		jam, err := s.gameJams.GetJamByURL(r.Context(), jamURL)
-		if err != nil {
-			s.tm.RenderError(w, http.StatusNotFound, err)
-			return
-		}
-
-		pageData := pagedata.NewGameEditFormPageData(*user, *jam, *game, true, validationErrors)
-		s.tm.Render(w, pageName, pageData)
+		s.redirectToValidatedGameForm(w, r, jamURL, *user, *game, true, &vErr)
+		return
 	}
 }
 
@@ -168,8 +166,6 @@ func (s *server) gameEditHandlerGet() http.HandlerFunc {
 
 func (s *server) gameEditHandlerPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const pageName = "game_edit_form"
-
 		jamURL := chi.URLParam(r, "jamURL")
 		gameURL := chi.URLParam(r, "gameURL")
 
@@ -186,24 +182,20 @@ func (s *server) gameEditHandlerPost() http.HandlerFunc {
 
 		game, err := s.parseGameForm(r)
 
-		validationErrors, err := s.gameJams.UpdateGame(r.Context(), jamURL, gameURL, *game)
-		if err != nil {
+		err = s.gameJams.UpdateGame(r.Context(), jamURL, gameURL, *game)
+		if err == nil {
+			http.Redirect(w, r, "/jams/"+jamURL+"/games/"+gameURL, http.StatusSeeOther)
+			return
+		}
+
+		var vErr validationerr.ValidationErrors
+		if !errors.As(err, &vErr) {
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
 			return
 		}
 
-		if len(validationErrors) == 0 {
-			http.Redirect(w, r, "/jams/"+jamURL+"/games/"+gameURL, http.StatusSeeOther)
-		}
-
-		jam, err := s.gameJams.GetJamByURL(r.Context(), jamURL)
-		if err != nil {
-			s.tm.RenderError(w, http.StatusNotFound, err)
-			return
-		}
-
-		pageData := pagedata.NewGameEditFormPageData(*user, *jam, *game, false, validationErrors)
-		s.tm.Render(w, pageName, pageData)
+		s.redirectToValidatedGameForm(w, r, jamURL, *user, *game, true, &vErr)
+		return
 	}
 }
 
@@ -220,4 +212,17 @@ func (s *server) gameBanHandlerGet() http.HandlerFunc {
 
 		http.Redirect(w, r, "/jams/"+jamURL+"/entries", http.StatusSeeOther)
 	}
+}
+
+func (s *server) redirectToValidatedGameForm(w http.ResponseWriter, r *http.Request, jamURL string, user users.User, game gamejams.Game, isNewGame bool, vErr *validationerr.ValidationErrors) {
+	const pageName = "game_edit_form"
+
+	jam, err := s.gameJams.GetJamByURL(r.Context(), jamURL)
+	if err != nil {
+		s.tm.RenderError(w, http.StatusNotFound, err)
+		return
+	}
+
+	pageData := pagedata.NewGameEditFormPageData(user, *jam, game, isNewGame, vErr)
+	s.tm.Render(w, pageName, pageData)
 }

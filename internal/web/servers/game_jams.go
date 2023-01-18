@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -8,18 +9,20 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"GameJamPlatform/internal/models/gamejams"
-	"GameJamPlatform/internal/web/forms"
+	"GameJamPlatform/internal/models/users"
+	"GameJamPlatform/internal/services/validationerr"
+	"GameJamPlatform/internal/web/defs"
 	"GameJamPlatform/internal/web/pagedata"
 )
 
-func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, forms.ValidationErrors, error) {
+func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, error) {
 	const maxUploadSize = 10 * 1024 * 1024 // 10 mb
 	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	validationErrors := make(forms.ValidationErrors)
+	vErr := validationerr.New()
 
 	jam := gamejams.GameJam{
 		Title:           r.FormValue("name"),
@@ -29,28 +32,32 @@ func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, forms.Validat
 		HideSubmissions: r.FormValue("hide_submissions") == "on",
 	}
 
-	jam.StartDate, err = time.Parse(forms.TimeLayout, r.FormValue("start_date"))
+	jam.StartDate, err = time.Parse(defs.TimeLayout, r.FormValue("start_date"))
 	if err != nil {
-		validationErrors["StartDate"] = "Must be a valid date"
+		vErr.Add("StartDate", "Must be a valid date")
 	}
-	jam.EndDate, err = time.Parse(forms.TimeLayout, r.FormValue("end_date"))
+	jam.EndDate, err = time.Parse(defs.TimeLayout, r.FormValue("end_date"))
 	if err != nil {
-		validationErrors["EndDate"] = "Must be a valid date"
+		vErr.Add("EndDate", "Must be a valid date")
 	}
-	jam.VotingEndDate, err = time.Parse(forms.TimeLayout, r.FormValue("voting_end_date"))
+	jam.VotingEndDate, err = time.Parse(defs.TimeLayout, r.FormValue("voting_end_date"))
 	if err != nil {
-		validationErrors["VotingEndDate"] = "Must be a valid date"
+		vErr.Add("VotingEndDate", "Must be a valid date")
 	}
 
 	coverImageURL, err := s.uploadImage(r, "cover_image")
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if coverImageURL != "" {
 		jam.CoverImageURL = coverImageURL
 	}
 
-	return &jam, validationErrors, nil
+	if vErr.HasErrors() {
+		return nil, vErr
+	}
+
+	return &jam, nil
 }
 
 func (s *server) jamsListHandlerGet() http.HandlerFunc {
@@ -87,33 +94,31 @@ func (s *server) jamNewHandlerGet() http.HandlerFunc {
 
 func (s *server) jamNewHandlerPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const pageName = "jam_edit_form"
-
 		user := s.authedUser(r)
 		if user == nil {
 			s.tm.RenderError(w, http.StatusUnauthorized, nil)
 			return
 		}
 
-		jam, validationErrors, err := s.parseJamForm(r)
+		jam, err := s.parseJamForm(r)
 		if err != nil {
+			var vErr validationerr.ValidationErrors
+			if errors.As(err, &vErr) {
+				s.redirectToValidatedJamForm(w, *user, *jam, true, &vErr)
+				return
+			}
 			s.tm.RenderError(w, http.StatusBadRequest, err)
 			return
 		}
-		if len(validationErrors) > 0 {
-			pageData := pagedata.NewJamEditFormPageData(*user, *jam, true, validationErrors)
-			s.tm.Render(w, pageName, pageData)
-			return
-		}
 
-		validationErrors, err = s.gameJams.CreateJam(r.Context(), *user, *jam)
+		err = s.gameJams.CreateJam(r.Context(), *user, *jam)
 		if err != nil {
+			var vErr validationerr.ValidationErrors
+			if errors.As(err, &vErr) {
+				s.redirectToValidatedJamForm(w, *user, *jam, true, &vErr)
+				return
+			}
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
-			return
-		}
-		if len(validationErrors) > 0 {
-			pageData := pagedata.NewJamEditFormPageData(*user, *jam, true, validationErrors)
-			s.tm.Render(w, pageName, pageData)
 			return
 		}
 
@@ -175,8 +180,6 @@ func (s *server) jamEditHandlerGet() http.HandlerFunc {
 
 func (s *server) jamEditHandlerPost() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const pageName = "jam_edit_form"
-
 		jamIDText := chi.URLParam(r, "jamID")
 		jamID, err := strconv.Atoi(jamIDText)
 		if err != nil {
@@ -195,25 +198,25 @@ func (s *server) jamEditHandlerPost() http.HandlerFunc {
 			return
 		}
 
-		jam, validationErrors, err := s.parseJamForm(r)
+		jam, err := s.parseJamForm(r)
 		if err != nil {
+			var vErr validationerr.ValidationErrors
+			if errors.As(err, &vErr) {
+				s.redirectToValidatedJamForm(w, *user, *jam, false, &vErr)
+				return
+			}
 			s.tm.RenderError(w, http.StatusBadRequest, err)
 			return
 		}
-		if len(validationErrors) > 0 {
-			pageData := pagedata.NewJamEditFormPageData(*user, *jam, false, validationErrors)
-			s.tm.Render(w, pageName, pageData)
-			return
-		}
 
-		validationErrors, err = s.gameJams.UpdateJam(r.Context(), jamID, *jam)
+		err = s.gameJams.UpdateJam(r.Context(), jamID, *jam)
 		if err != nil {
+			var vErr validationerr.ValidationErrors
+			if errors.As(err, &vErr) {
+				s.redirectToValidatedJamForm(w, *user, *jam, true, &vErr)
+				return
+			}
 			s.tm.RenderError(w, http.StatusInternalServerError, err)
-			return
-		}
-		if validationErrors != nil {
-			pageData := pagedata.NewJamEditFormPageData(*user, *jam, false, validationErrors)
-			s.tm.Render(w, pageName, pageData)
 			return
 		}
 
@@ -274,4 +277,11 @@ func (s *server) jamEntriesHandlerGet() http.HandlerFunc {
 		pageData := pagedata.NewJamEntriesPageData(user, *jam, games)
 		s.tm.Render(w, pageName, pageData)
 	}
+}
+
+func (s *server) redirectToValidatedJamForm(w http.ResponseWriter, user users.User, jam gamejams.GameJam, isNewJam bool, vErr *validationerr.ValidationErrors) {
+	const pageName = "jam_edit_form"
+
+	pageData := pagedata.NewJamEditFormPageData(user, jam, isNewJam, vErr)
+	s.tm.Render(w, pageName, pageData)
 }

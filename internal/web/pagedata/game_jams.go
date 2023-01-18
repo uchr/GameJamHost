@@ -5,7 +5,8 @@ import (
 
 	"GameJamPlatform/internal/models/gamejams"
 	"GameJamPlatform/internal/models/users"
-	"GameJamPlatform/internal/web/forms"
+	"GameJamPlatform/internal/services/validationerr"
+	"GameJamPlatform/internal/web/defs"
 )
 
 type JamListPageData struct {
@@ -47,30 +48,30 @@ type JamEditFormPageData struct {
 	IsNewJam bool
 
 	Jam    gamejams.GameJam
-	Errors forms.ValidationErrors
+	Errors map[string]string
 
 	StartDate     string
 	EndDate       string
 	VotingEndDate string
 }
 
-func NewJamEditFormPageData(user users.User, jam gamejams.GameJam, isNewJam bool, validationErrors forms.ValidationErrors) JamEditFormPageData {
+func NewJamEditFormPageData(user users.User, jam gamejams.GameJam, isNewJam bool, vErr *validationerr.ValidationErrors) JamEditFormPageData {
 	pageData := JamEditFormPageData{
 		AuthPageData: NewAuthPageData(&user),
 
 		IsNewJam: isNewJam,
 		Jam:      jam,
-		Errors:   validationErrors,
+		Errors:   vErr.Errors(),
 	}
 
 	if !jam.StartDate.IsZero() {
-		pageData.StartDate = jam.StartDate.Format(forms.TimeLayout)
+		pageData.StartDate = jam.StartDate.Format(defs.TimeLayout)
 	}
 	if !jam.EndDate.IsZero() {
-		pageData.EndDate = jam.EndDate.Format(forms.TimeLayout)
+		pageData.EndDate = jam.EndDate.Format(defs.TimeLayout)
 	}
 	if !jam.VotingEndDate.IsZero() {
-		pageData.VotingEndDate = jam.VotingEndDate.Format(forms.TimeLayout)
+		pageData.VotingEndDate = jam.VotingEndDate.Format(defs.TimeLayout)
 	}
 
 	return pageData

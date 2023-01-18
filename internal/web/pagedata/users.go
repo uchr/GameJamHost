@@ -5,7 +5,7 @@ import (
 
 	"GameJamPlatform/internal/models/gamejams"
 	"GameJamPlatform/internal/models/users"
-	"GameJamPlatform/internal/web/forms"
+	"GameJamPlatform/internal/services/validationerr"
 )
 
 type UserProfilePageData struct {
@@ -35,13 +35,13 @@ func NewUserProfilePageData(authedUser *users.User, profileUser users.User, jams
 type UserEditFormPageData struct {
 	AuthPageData
 
-	Errors forms.ValidationErrors
+	Errors map[string]string
 }
 
-func NewUserEditFormPageData(user users.User, validationErrors forms.ValidationErrors) UserEditFormPageData {
+func NewUserEditFormPageData(user users.User, vErr *validationerr.ValidationErrors) UserEditFormPageData {
 	return UserEditFormPageData{
 		AuthPageData: NewAuthPageData(&user),
 
-		Errors: validationErrors,
+		Errors: vErr.Errors(),
 	}
 }

@@ -11,32 +11,36 @@ import (
 
 	"GameJamPlatform/internal/models/gamejams"
 	"GameJamPlatform/internal/models/users"
+	"GameJamPlatform/internal/services/validationerr"
 	"GameJamPlatform/internal/storages"
-	"GameJamPlatform/internal/web/forms"
 )
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func (jm *gameJamManager) validateGame(game gamejams.Game) forms.ValidationErrors {
+func (jm *gameJamManager) validateGame(game gamejams.Game) error {
 	const maxTitleLength = 64
 	const maxBuildLength = 1000
 	const maxContentLength = 10000
 
-	validationErrors := make(forms.ValidationErrors)
+	vErr := validationerr.New()
 
 	if len(game.Title) == 0 || len(game.Title) > maxTitleLength {
-		validationErrors["Title"] = fmt.Sprintf("Title must be less than %d characters and not empty", maxTitleLength)
+		vErr.Add("Title", fmt.Sprintf("Title must be less than %d characters and not empty", maxTitleLength))
 	}
 	if len(game.Build) == 0 || len(game.Build) > maxBuildLength {
-		validationErrors["Build"] = fmt.Sprintf("Build must be less than %d characters and not empty", maxBuildLength)
+		vErr.Add("Build", fmt.Sprintf("Build must be less than %d characters and not empty", maxBuildLength))
 	}
 	if len(game.Content) > maxContentLength {
-		validationErrors["Content"] = fmt.Sprintf("Content must be less than %d characters and not empty", maxContentLength)
+		vErr.Add("Content", fmt.Sprintf("Content must be less than %d characters and not empty", maxContentLength))
 	}
 
-	return validationErrors
+	if vErr.HasErrors() {
+		return vErr
+	}
+
+	return nil
 }
 
 func generateRandomString(n int) (string, error) {
@@ -55,7 +59,7 @@ func generateRandomString(n int) (string, error) {
 }
 
 func urlFromTitle(gameName string) string {
-	nonAlphanumericRegex := regexp.MustCompile(`[^a-zA-Z0-9 ]+`)
+	nonAlphanumericRegex := regexp.MustCompile(`[^a-zA-Z0-9- ]+`)
 	result := nonAlphanumericRegex.ReplaceAllString(gameName, " ")
 	spaceRegex := regexp.MustCompile(`\s+`)
 	result = spaceRegex.ReplaceAllString(result, "-")
@@ -70,7 +74,10 @@ func (jm *gameJamManager) generateGameUrl(ctx context.Context, jamID int, gameNa
 
 	const maxTries = 10
 	for i := 0; i < maxTries; i++ {
-		resultUrl := baseUrl + "-" + suffix
+		resultUrl := baseUrl
+		if suffix != "" {
+			resultUrl += "-" + suffix
+		}
 		_, err := jm.repo.GetGame(ctx, jamID, resultUrl)
 		if errors.Is(err, storages.ErrNotFound) {
 			return resultUrl, nil
@@ -85,16 +92,15 @@ func (jm *gameJamManager) generateGameUrl(ctx context.Context, jamID int, gameNa
 	return "", errors.New("failed to generate unique game URL")
 }
 
-// CreateGame creates a new game in the database and returns the game's URL.
-func (jm *gameJamManager) CreateGame(ctx context.Context, jamURL string, user users.User, game gamejams.Game) (string, forms.ValidationErrors, error) {
-	validationErrors := jm.validateGame(game)
-	if len(validationErrors) > 0 {
-		return "", validationErrors, nil
+func (jm *gameJamManager) CreateGame(ctx context.Context, jamURL string, user users.User, game gamejams.Game) (string, error) {
+	err := jm.validateGame(game)
+	if err != nil {
+		return "", err
 	}
 
 	jamID, err := jm.repo.GetJamID(ctx, jamURL)
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
 
 	game.Title = strings.TrimSpace(game.Title)
@@ -102,27 +108,31 @@ func (jm *gameJamManager) CreateGame(ctx context.Context, jamURL string, user us
 	game.URL, err = jm.generateGameUrl(ctx, jamID, game.Title)
 	game.UserID = user.ID
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
 
 	err = jm.repo.CreateGame(ctx, game)
-	return game.URL, nil, err
+	if err != nil {
+		return "", err
+	}
+
+	return game.URL, nil
 }
 
-func (jm *gameJamManager) UpdateGame(ctx context.Context, jamURL string, gameURL string, game gamejams.Game) (forms.ValidationErrors, error) {
-	validationErrors := jm.validateGame(game)
-	if len(validationErrors) > 0 {
-		return validationErrors, nil
+func (jm *gameJamManager) UpdateGame(ctx context.Context, jamURL string, gameURL string, game gamejams.Game) error {
+	err := jm.validateGame(game)
+	if err != nil {
+		return err
 	}
 
 	jamID, err := jm.repo.GetJamID(ctx, jamURL)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	prevGame, err := jm.repo.GetGame(ctx, jamID, gameURL)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	prevGame.Title = game.Title
@@ -136,7 +146,7 @@ func (jm *gameJamManager) UpdateGame(ctx context.Context, jamURL string, gameURL
 	}
 
 	err = jm.repo.UpdateGame(ctx, *prevGame)
-	return nil, err
+	return err
 }
 
 func (jm *gameJamManager) BanGame(ctx context.Context, jamURL string, gameURL string) error {

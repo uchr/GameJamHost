@@ -8,39 +8,43 @@ import (
 
 	"GameJamPlatform/internal/models/gamejams"
 	"GameJamPlatform/internal/models/users"
-	"GameJamPlatform/internal/web/forms"
+	"GameJamPlatform/internal/services/validationerr"
 )
 
-func (jm *gameJamManager) validateJam(ctx context.Context, jam gamejams.GameJam) (forms.ValidationErrors, error) {
+func (jm *gameJamManager) validateJam(ctx context.Context, jam gamejams.GameJam) error {
 	const maxTitleLength = 64
 	const maxURLLength = 64
 	const maxContentLength = 10000
 
-	validationErrors := make(forms.ValidationErrors)
+	vErr := validationerr.New()
 
 	urlFormat := regexp.MustCompile(`^[a-z0-9-]+$`)
 	if !urlFormat.MatchString(jam.URL) {
-		validationErrors["URL"] = "URL must only contain lowercase letters, numbers and dashes"
+		vErr.Add("URL", "URL must only contain lowercase letters, numbers and dashes")
 	}
 
 	if len(jam.URL) == 0 || len(jam.URL) > maxURLLength {
-		validationErrors["URL"] = fmt.Sprintf("URL length must be less than %d and not empty", maxURLLength)
+		vErr.Add("URL", fmt.Sprintf("URL length must be less than %d and not empty", maxURLLength))
 	}
 	if len(jam.Title) == 0 || len(jam.Title) > maxTitleLength {
-		validationErrors["Title"] = fmt.Sprintf("Name length must be less than %d and not empty", maxTitleLength)
+		vErr.Add("Title", fmt.Sprintf("Name length must be less than %d and not empty", maxTitleLength))
 	}
 	if len(jam.Content) > maxContentLength {
-		validationErrors["Content"] = fmt.Sprintf("Content length must be less than %d", maxContentLength)
+		vErr.Add("Content", fmt.Sprintf("Content length must be less than %d", maxContentLength))
 	}
 
 	// TODO: Validate dates
 
 	prevGameJam, err := jm.repo.GetJamID(ctx, jam.URL)
 	if err == nil && prevGameJam != jam.ID {
-		validationErrors["URL"] = "URL already exists"
+		vErr.Add("URL", "URL already exists")
 	}
 
-	return validationErrors, nil
+	if vErr.HasErrors() {
+		return vErr
+	}
+
+	return nil
 }
 
 func (jm *gameJamManager) GetJams(ctx context.Context) ([]gamejams.GameJam, error) {
@@ -53,19 +57,16 @@ func (jm *gameJamManager) GetJamsByUserID(ctx context.Context, userID int) ([]ga
 	return jams, err
 }
 
-func (jm *gameJamManager) CreateJam(ctx context.Context, user users.User, jam gamejams.GameJam) (forms.ValidationErrors, error) {
+func (jm *gameJamManager) CreateJam(ctx context.Context, user users.User, jam gamejams.GameJam) error {
 	jam.Title = strings.TrimSpace(jam.Title)
-	validationErrors, err := jm.validateJam(ctx, jam)
+	err := jm.validateJam(ctx, jam)
 	if err != nil {
-		return nil, err
-	}
-	if len(validationErrors) > 0 {
-		return validationErrors, nil
+		return err
 	}
 
 	jam.UserID = user.ID
 	err = jm.repo.CreateJam(ctx, jam)
-	return nil, err
+	return err
 }
 
 func (jm *gameJamManager) DeleteJam(ctx context.Context, jamID int) error {
@@ -88,20 +89,17 @@ func (jm *gameJamManager) GetJamByID(ctx context.Context, jamID int) (*gamejams.
 	return jam, err
 }
 
-func (jm *gameJamManager) UpdateJam(ctx context.Context, jamID int, jam gamejams.GameJam) (forms.ValidationErrors, error) {
+func (jm *gameJamManager) UpdateJam(ctx context.Context, jamID int, jam gamejams.GameJam) error {
 	jam.Title = strings.TrimSpace(jam.Title)
 	jam.ID = jamID
 
-	validationErrors, err := jm.validateJam(ctx, jam)
+	err := jm.validateJam(ctx, jam)
 	if err != nil {
-		return nil, err
-	}
-	if len(validationErrors) > 0 {
-		return validationErrors, nil
+		return err
 	}
 
 	err = jm.repo.UpdateJam(ctx, jam)
-	return nil, err
+	return err
 }
 
 func (jm *gameJamManager) JamEntries(ctx context.Context, jamURL string) ([]gamejams.Game, error) {
