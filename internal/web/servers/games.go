@@ -23,7 +23,7 @@ func (s *server) parseGameForm(r *http.Request) (*gamejams.Game, error) {
 		Content: r.FormValue("content"),
 	}
 
-	coverImageURL, err := s.uploadImage(r, "CoverImage")
+	coverImageURL, err := s.uploadImage(r, "cover_image")
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (s *server) parseGameForm(r *http.Request) (*gamejams.Game, error) {
 	}
 
 	for i := 0; i < 3; i++ {
-		imageURL, err := s.uploadImage(r, fmt.Sprintf("Screenshot-%d", i))
+		imageURL, err := s.uploadImage(r, fmt.Sprintf("screenshot_%d", i))
 		if err != nil {
 			return nil, err
 		}

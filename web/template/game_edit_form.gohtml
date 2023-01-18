@@ -46,7 +46,7 @@
             <img src="/static/user_images/{{.Game.CoverImageURL}}" alt="Cover image" />
             {{ end }}
             <label class="label">Cover image</label>
-            <input type="file" name="CoverImage" />
+            <input type="file" name="cover_image" />
         </div>
     </div>
 
@@ -56,21 +56,21 @@
             <img src="/static/user_images/{{index .Game.ScreenshotURLs 0}}" alt="Screenshot 1" />
             {{ end }}
             <label class="label">Screenshot 1</label>
-            <input type="file" name="Screenshot-0" />
+            <input type="file" name="screenshot_0" />
         </div>
         <div class="control">
             {{ if gt (len .Game.ScreenshotURLs) 1 }}
             <img src="/static/user_images/{{index .Game.ScreenshotURLs 1}}" alt="Screenshot 2" />
             {{ end }}
             <label class="label">Screenshot 2</label>
-            <input type="file" name="Screenshot-1" />
+            <input type="file" name="screenshot_1" />
         </div>
         <div class="control">
             {{ if gt (len .Game.ScreenshotURLs) 2 }}
             <img src="/static/user_images/{{index .Game.ScreenshotURLs 2}}" alt="Screenshot 3" />
             {{ end }}
             <label class="label">Screenshot 3</label>
-            <input type="file" name="Screenshot-2" />
+            <input type="file" name="screenshot_2" />
         </div>
     </div>
 

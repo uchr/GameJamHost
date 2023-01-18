@@ -134,8 +134,8 @@ func (s *server) loginHandlerPost() http.HandlerFunc {
 			return
 		}
 
-		username := r.Form.Get("Username")
-		password := r.Form.Get("Password")
+		username := r.Form.Get("username")
+		password := r.Form.Get("password")
 
 		user, err := s.users.GetUserByUsername(r.Context(), username)
 		if err != nil {

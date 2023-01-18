@@ -56,20 +56,20 @@
                     <img src="/static/user_images/{{.Jam.CoverImageURL}}" alt="Cover image"/>
                 {{ end }}
                 <label class="label">Cover image</label>
-                <input type="file" name="CoverImage"/>
+                <input type="file" name="cover_image"/>
             </div>
         </div>
 
         <div class="field">
             <div class="control">
                 <label class="checkbox">
-                    <input type="checkbox" name="hideResults" {{ if .Jam.HideResults }} checked {{ end }}> Hide results
+                    <input type="checkbox" name="hide_results" {{ if .Jam.HideResults }} checked {{ end }}> Hide results
                 </label>
             </div>
 
             <div class="control">
                 <label class="checkbox">
-                    <input type="checkbox" name="hideSubmissions" {{ if .Jam.HideSubmissions }} checked {{ end }}> Hide
+                    <input type="checkbox" name="hide_submissions" {{ if .Jam.HideSubmissions }} checked {{ end }}> Hide
                     submissions
                 </label>
             </div>
@@ -81,7 +81,7 @@
                 {{ with .Errors.StartDate }}
                     <p class="help is-danger">{{ . }}</p>
                 {{ end }}
-                <input class="input" name="startDate" type="datetime-local" value="{{.StartDate}}"/>
+                <input class="input" name="start_date" type="datetime-local" value="{{.StartDate}}"/>
             </div>
 
             <div class="control">
@@ -89,7 +89,7 @@
                 {{ with .Errors.EndDate }}
                     <p class="help is-danger">{{ . }}</p>
                 {{ end }}
-                <input class="input" name="endDate" type="datetime-local" value="{{.EndDate}}"/>
+                <input class="input" name="end_date" type="datetime-local" value="{{.EndDate}}"/>
             </div>
 
             <div class="control">
@@ -97,7 +97,7 @@
                 {{ with .Errors.VotingEndDate }}
                     <p class="help is-danger">{{ . }}</p>
                 {{ end }}
-                <input class="input" name="votingEndDate" type="datetime-local" value="{{.VotingEndDate}}"/>
+                <input class="input" name="voting_end_date" type="datetime-local" value="{{.VotingEndDate}}"/>
             </div>
         </div>
 

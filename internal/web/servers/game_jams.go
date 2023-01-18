@@ -25,24 +25,24 @@ func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, forms.Validat
 		Title:           r.FormValue("name"),
 		URL:             r.FormValue("url"),
 		Content:         r.FormValue("content"),
-		HideResults:     r.FormValue("hideResults") == "on",
-		HideSubmissions: r.FormValue("hideSubmissions") == "on",
+		HideResults:     r.FormValue("hide_results") == "on",
+		HideSubmissions: r.FormValue("hide_submissions") == "on",
 	}
 
-	jam.StartDate, err = time.Parse(forms.TimeLayout, r.FormValue("startDate"))
+	jam.StartDate, err = time.Parse(forms.TimeLayout, r.FormValue("start_date"))
 	if err != nil {
 		validationErrors["StartDate"] = "Must be a valid date"
 	}
-	jam.EndDate, err = time.Parse(forms.TimeLayout, r.FormValue("endDate"))
+	jam.EndDate, err = time.Parse(forms.TimeLayout, r.FormValue("end_date"))
 	if err != nil {
 		validationErrors["EndDate"] = "Must be a valid date"
 	}
-	jam.VotingEndDate, err = time.Parse(forms.TimeLayout, r.FormValue("votingEndDate"))
+	jam.VotingEndDate, err = time.Parse(forms.TimeLayout, r.FormValue("voting_end_date"))
 	if err != nil {
 		validationErrors["VotingEndDate"] = "Must be a valid date"
 	}
 
-	coverImageURL, err := s.uploadImage(r, "CoverImage")
+	coverImageURL, err := s.uploadImage(r, "cover_image")
 	if err != nil {
 		return nil, nil, err
 	}
