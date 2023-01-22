@@ -1,9 +1,11 @@
 {{define "content"}}
     <div class="content">
-        <h1 class="title is-1">{{.User.Username}}</h1>
+        <h1 class="title is-1">{{.ProfileUser.Username}}</h1>
 
-        {{ if eq .ProfileUser.ID .User.ID }}
-            <a href="/users/{{.User.Username}}/edit" class="button is-small is-link">Edit</a>
+        {{ if .IsAuth}}
+            {{ if eq .ProfileUser.ID .User.ID }}
+                <a href="/users/{{.ProfileUser.Username}}/edit" class="button is-small is-link">Edit</a>
+            {{ end }}
         {{ end }}
 
         <h2>About</h2>

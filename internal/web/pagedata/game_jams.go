@@ -47,21 +47,24 @@ type JamEditFormPageData struct {
 
 	IsNewJam bool
 
-	Jam    gamejams.GameJam
-	Errors map[string]string
+	Jam gamejams.GameJam
 
 	StartDate     string
 	EndDate       string
 	VotingEndDate string
+
+	Errors map[string]string
 }
 
 func NewJamEditFormPageData(user users.User, jam gamejams.GameJam, isNewJam bool, vErr *validationerr.ValidationErrors) JamEditFormPageData {
 	pageData := JamEditFormPageData{
 		AuthPageData: NewAuthPageData(&user),
 
+		Jam: jam,
+
 		IsNewJam: isNewJam,
-		Jam:      jam,
-		Errors:   vErr.Errors(),
+
+		Errors: vErr.Errors(),
 	}
 
 	if !jam.StartDate.IsZero() {

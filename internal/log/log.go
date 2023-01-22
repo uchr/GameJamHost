@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
@@ -39,12 +38,12 @@ func Init(level Level, logFolder string) {
 
 	err := os.MkdirAll(logFolder, os.ModePerm)
 	if err != nil {
-		Error(errors.Errorf("Error in creating log file. %v", err))
+		Error(fmt.Errorf("Error in creating log file. %v", err))
 	}
 
 	logFile, err := os.OpenFile(fmt.Sprintf("%s/%s.log", logFolder, time.Now().Format("02-01-2006")), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666)
 	if err != nil {
-		Error(errors.Errorf("Error in creating log file. %v", err))
+		Error(fmt.Errorf("Error in creating log file. %v", err))
 	}
 
 	w := zerolog.MultiLevelWriter(logFile, zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC1123})
@@ -54,11 +53,11 @@ func Init(level Level, logFolder string) {
 }
 
 func Panic(err error, msg string) {
-	getLogger().Panic().Err(errors.Wrap(err, msg)).Send()
+	getLogger().Panic().Err(err).Msg(msg)
 }
 
 func Error(err error) {
-	getLogger().Error().Err(errors.Wrap(err, "")).Send()
+	getLogger().Error().Err(err).Send()
 }
 
 func Info(msg string, args ...any) {

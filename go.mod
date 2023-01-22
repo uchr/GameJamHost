@@ -12,7 +12,6 @@ require (
 	github.com/jackc/tern v1.13.0
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.2
-	github.com/pkg/errors v0.8.1
 	github.com/rs/zerolog v1.15.0
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 )
@@ -33,5 +32,6 @@ require (
 	github.com/jackc/pgtype v1.12.0 // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )

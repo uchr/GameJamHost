@@ -53,8 +53,18 @@ func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, error) {
 		jam.CoverImageURL = coverImageURL
 	}
 
+	criteriaValues := r.Form["criteria[]"]
+	descriptionValues := r.Form["criteria_desc[]"]
+	if len(criteriaValues) != len(descriptionValues) {
+		return nil, errors.New("criteria and criteria_desc must be the same length")
+	}
+
+	for i := range criteriaValues {
+		jam.Criteria = append(jam.Criteria, gamejams.Criteria{Title: criteriaValues[i], Description: descriptionValues[i]})
+	}
+
 	if vErr.HasErrors() {
-		return nil, vErr
+		return &jam, vErr
 	}
 
 	return &jam, nil

@@ -69,6 +69,18 @@ CREATE TABLE IF NOT EXISTS sessions
     expire_at  timestamptz
 );
 
+CREATE TABLE IF NOT EXISTS criteria
+(
+    criteria_id INT GENERATED ALWAYS AS IDENTITY,
+    jam_id INT NOT NULL REFERENCES game_jams (game_jam_id),
+    title       text,
+    description text,
+    created_at  timestamptz not null default current_timestamp,
+
+    primary key (criteria_id),
+    unique (criteria_id)
+);
+
 ---- create above / drop below ----
 
 DROP TABLE IF EXISTS game_jams;
@@ -76,4 +88,4 @@ DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS participants;
 DROP TABLE IF EXISTS sessions;
-
+DROP TABLE IF EXISTS criteria;

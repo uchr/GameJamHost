@@ -2,9 +2,9 @@ package storages
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/tern/migrate"
-	"github.com/pkg/errors"
 
 	"GameJamPlatform/internal/log"
 )
@@ -16,12 +16,12 @@ func (st *storage) Migrate(ctx context.Context) error {
 
 	migrator, err := migrate.NewMigrator(ctx, st.db, "version")
 	if err != nil {
-		return errors.Wrap(err, "Migrator error")
+		return fmt.Errorf("migrator error: %w", err)
 	}
 
 	err = migrator.LoadMigrations(st.cfg.MigrationPath)
 	if err != nil {
-		return errors.Wrap(err, "Migrator error")
+		return fmt.Errorf("migrator error: %w", err)
 	}
 
 	ver, err := migrator.GetCurrentVersion(ctx)
@@ -31,7 +31,7 @@ func (st *storage) Migrate(ctx context.Context) error {
 
 		err = migrator.Migrate(ctx)
 		if err != nil {
-			return errors.Wrap(err, "Migrator error")
+			return fmt.Errorf("migrator error: %w", err)
 		}
 
 		log.Debug("Migrate to last version success")
@@ -43,7 +43,7 @@ func (st *storage) Migrate(ctx context.Context) error {
 
 		err = migrator.MigrateTo(ctx, st.cfg.MigrationVersion)
 		if err != nil {
-			return errors.Wrap(err, "Migrator error")
+			return fmt.Errorf("migrator error: %w", err)
 		}
 
 		log.Debug("Migrate to version %d success", st.cfg.MigrationVersion)

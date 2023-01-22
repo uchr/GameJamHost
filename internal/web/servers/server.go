@@ -44,7 +44,6 @@ func (s *server) Run() error {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(log.LoggerMiddleware())
-	r.Use(middleware.Recoverer)
 	r.Use(s.authMiddleware)
 
 	fs := http.FileServer(http.Dir(s.cfg.StaticDir))

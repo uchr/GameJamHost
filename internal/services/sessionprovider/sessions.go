@@ -11,17 +11,17 @@ import (
 	"GameJamPlatform/internal/storages"
 )
 
-type sessionsProvider struct {
+type SessionsProvider struct {
 	repo storages.Repo
 }
 
-var _ = SessionProvider(&sessionsProvider{})
+var _ = SessionProvider(&SessionsProvider{})
 
-func NewProvider(repo storages.Repo) *sessionsProvider {
-	return &sessionsProvider{repo: repo}
+func NewProvider(repo storages.Repo) *SessionsProvider {
+	return &SessionsProvider{repo: repo}
 }
 
-func (sp *sessionsProvider) Create(ctx context.Context, userID int) (*sessions.Session, error) {
+func (sp *SessionsProvider) Create(ctx context.Context, userID int) (*sessions.Session, error) {
 	session := sessions.Session{
 		UID:      uuid.New().String(),
 		UserID:   userID,
@@ -36,7 +36,7 @@ func (sp *sessionsProvider) Create(ctx context.Context, userID int) (*sessions.S
 	return &session, nil
 }
 
-func (sp *sessionsProvider) GetAndUpdate(ctx context.Context, sessionID string) (*sessions.Session, error) {
+func (sp *SessionsProvider) GetAndUpdate(ctx context.Context, sessionID string) (*sessions.Session, error) {
 	session, err := sp.repo.GetSession(ctx, sessionID)
 	if err != nil {
 		if errors.Is(err, storages.ErrNotFound) {
@@ -62,7 +62,7 @@ func (sp *sessionsProvider) GetAndUpdate(ctx context.Context, sessionID string) 
 	return session, nil
 }
 
-func (sp *sessionsProvider) CheckAndUpdate(ctx context.Context, sessionID string) (*sessions.Session, error) {
+func (sp *SessionsProvider) CheckAndUpdate(ctx context.Context, sessionID string) (*sessions.Session, error) {
 	session, err := sp.repo.GetSession(ctx, sessionID)
 	if err != nil {
 		if errors.Is(err, storages.ErrNotFound) {
@@ -88,6 +88,6 @@ func (sp *sessionsProvider) CheckAndUpdate(ctx context.Context, sessionID string
 	return session, nil
 }
 
-func (sp *sessionsProvider) Delete(ctx context.Context, sessionID string) error {
+func (sp *SessionsProvider) Delete(ctx context.Context, sessionID string) error {
 	return sp.repo.DeleteSession(ctx, sessionID)
 }

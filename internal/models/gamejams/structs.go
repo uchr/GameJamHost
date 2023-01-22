@@ -18,6 +18,8 @@ type GameJam struct {
 	HideSubmissions bool
 
 	CoverImageURL string
+
+	Criteria []Criteria
 }
 
 type Game struct {
@@ -36,13 +38,19 @@ type Game struct {
 	ScreenshotURLs []string
 }
 
-type JamHost struct {
-	ID        int
-	GameJamID int
-	UserID    int
+type Criteria struct {
+	ID    int
+	JamID int
+
+	Title       string
+	Description string
 }
 
-type JamHostInvite struct {
-	UID       string
-	GameJamID int
+type Vote struct {
+	ID         int
+	GameID     int
+	UserID     int
+	CriteriaID int
+
+	Value int
 }
