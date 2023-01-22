@@ -19,7 +19,8 @@ type GameJam struct {
 
 	CoverImageURL string
 
-	Criteria []Criteria
+	Criteria  []Criteria
+	Questions []JamQuestion
 }
 
 type Game struct {
@@ -36,6 +37,8 @@ type Game struct {
 
 	CoverImageURL  string
 	ScreenshotURLs []string
+
+	Answers []GameAnswer
 }
 
 type Criteria struct {
@@ -47,10 +50,28 @@ type Criteria struct {
 }
 
 type Vote struct {
-	ID         int
-	GameID     int
-	UserID     int
-	CriteriaID int
+	ID          int
+	GameID      int
+	UserID      int
+	CriteriaUID string
 
 	Value int
+}
+
+type JamQuestion struct {
+	ID    int
+	JamID int
+
+	Title       string
+	Description string
+
+	HiddenCriteria string
+}
+
+type GameAnswer struct {
+	ID         int
+	GameID     int
+	QuestionID int
+
+	Answer bool
 }

@@ -64,14 +64,17 @@ CREATE TABLE IF NOT EXISTS participants
 
 CREATE TABLE IF NOT EXISTS sessions
 (
-    session_id text PRIMARY KEY,
+    session_id text NOT NULL,
     user_id    INT NOT NULL REFERENCES users (user_id),
-    expire_at  timestamptz
+    expire_at  timestamptz,
+
+    primary key (session_id),
+    unique (session_id)
 );
 
 CREATE TABLE IF NOT EXISTS criteria
 (
-    criteria_id INT GENERATED ALWAYS AS IDENTITY,
+    criteria_id int GENERATED ALWAYS AS IDENTITY,
     jam_id INT NOT NULL REFERENCES game_jams (game_jam_id),
     title       text,
     description text,
@@ -79,6 +82,30 @@ CREATE TABLE IF NOT EXISTS criteria
 
     primary key (criteria_id),
     unique (criteria_id)
+);
+
+CREATE TABLE IF NOT EXISTS jam_questions
+(
+    question_id int GENERATED ALWAYS AS IDENTITY,
+    jam_id INT NOT NULL REFERENCES game_jams (game_jam_id),
+    title       text,
+    description text,
+    hidden_criteria text,
+    created_at  timestamptz not null default current_timestamp,
+
+    primary key (question_id),
+    unique (question_id)
+);
+
+CREATE TABLE IF NOT EXISTS game_answers
+(
+    answer_id int GENERATED ALWAYS AS IDENTITY,
+    game_id INT NOT NULL REFERENCES games (game_id),
+    question_id int NOT NULL REFERENCES jam_questions (question_id),
+    answer bool,
+
+    primary key (answer_id),
+    unique (answer_id)
 );
 
 ---- create above / drop below ----
@@ -89,3 +116,4 @@ DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS participants;
 DROP TABLE IF EXISTS sessions;
 DROP TABLE IF EXISTS criteria;
+DROP TABLE IF EXISTS jam_questions;

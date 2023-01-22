@@ -26,6 +26,14 @@ func (st *storage) CreateJam(ctx context.Context, jam gamejams.GameJam) error {
 		}
 	}
 
+	for _, q := range jam.Questions {
+		q.JamID = jam.ID
+		err = st.createQuestion(ctx, q)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -42,6 +50,11 @@ func (st *storage) GetJamByID(ctx context.Context, jamID int) (*gamejams.GameJam
 	}
 
 	jam.Criteria, err = st.getCriteria(ctx, jamID)
+	if err != nil {
+		return nil, err
+	}
+
+	jam.Questions, err = st.getQuestions(ctx, jamID)
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +79,11 @@ func (st *storage) GetJamByURL(ctx context.Context, jamURL string) (*gamejams.Ga
 		return nil, err
 	}
 
+	jam.Questions, err = st.getQuestions(ctx, jam.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &jam, nil
 }
 
@@ -81,9 +99,22 @@ func (st *storage) UpdateJam(ctx context.Context, jam gamejams.GameJam) error {
 		return err
 	}
 
+	err = st.deleteQuestions(ctx, jam.ID)
+	if err != nil {
+		return err
+	}
+
 	for _, c := range jam.Criteria {
 		c.JamID = jam.ID
 		err = st.createCriteria(ctx, c)
+		if err != nil {
+			return err
+		}
+	}
+
+	for _, q := range jam.Questions {
+		q.JamID = jam.ID
+		err = st.createQuestion(ctx, q)
 		if err != nil {
 			return err
 		}
@@ -111,6 +142,12 @@ func (st *storage) GetJams(ctx context.Context) ([]gamejams.GameJam, error) {
 			return nil, err
 		}
 		jam.Criteria = criteria
+
+		questions, err := st.getQuestions(ctx, jam.ID)
+		if err != nil {
+			return nil, err
+		}
+		jam.Questions = questions
 
 		gameJams = append(gameJams, jam)
 	}
@@ -142,6 +179,12 @@ func (st *storage) GetJamsByUserID(ctx context.Context, userID int) ([]gamejams.
 		}
 		jam.Criteria = criteria
 
+		questions, err := st.getQuestions(ctx, jam.ID)
+		if err != nil {
+			return nil, err
+		}
+		jam.Questions = questions
+
 		gameJams = append(gameJams, jam)
 	}
 
@@ -153,7 +196,11 @@ func (st *storage) GetJamsByUserID(ctx context.Context, userID int) ([]gamejams.
 }
 
 func (st *storage) DeleteJam(ctx context.Context, jamID int) error {
-	_, err := st.db.Exec(ctx, "DELETE FROM criteria WHERE jam_id = $1", jamID)
+	err := st.deleteCriteria(ctx, jamID)
+	if err != nil {
+		return err
+	}
+	err = st.deleteQuestions(ctx, jamID)
 	if err != nil {
 		return err
 	}

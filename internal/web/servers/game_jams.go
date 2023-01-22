@@ -53,14 +53,30 @@ func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, error) {
 		jam.CoverImageURL = coverImageURL
 	}
 
-	criteriaValues := r.Form["criteria[]"]
-	descriptionValues := r.Form["criteria_desc[]"]
-	if len(criteriaValues) != len(descriptionValues) {
+	criteriaTitleValues := r.Form["criteria_title[]"]
+	criteriaDescValues := r.Form["criteria_desc[]"]
+	if len(criteriaTitleValues) != len(criteriaDescValues) {
 		return nil, errors.New("criteria and criteria_desc must be the same length")
 	}
+	for i := range criteriaTitleValues {
+		jam.Criteria = append(jam.Criteria, gamejams.Criteria{
+			Title:       criteriaTitleValues[i],
+			Description: criteriaDescValues[i]},
+		)
+	}
 
-	for i := range criteriaValues {
-		jam.Criteria = append(jam.Criteria, gamejams.Criteria{Title: criteriaValues[i], Description: descriptionValues[i]})
+	questionTitleValues := r.Form["question_title[]"]
+	questionDescValues := r.Form["question_desc[]"]
+	questionCriteriaValues := r.Form["question_criteria[]"]
+	if len(questionTitleValues) != len(questionDescValues) || len(questionTitleValues) != len(questionCriteriaValues) {
+		return nil, errors.New("question_title, question_desc, and question_criteria must be the same length")
+	}
+	for i := range questionTitleValues {
+		jam.Questions = append(jam.Questions, gamejams.JamQuestion{
+			Title:          questionTitleValues[i],
+			Description:    questionDescValues[i],
+			HiddenCriteria: questionCriteriaValues[i]},
+		)
 	}
 
 	if vErr.HasErrors() {

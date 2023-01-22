@@ -86,9 +86,9 @@
             <div class="field">
                 <div class="control">
                     <label class="checkbox">
-                        <input type="checkbox" name="hide_results" {{ if .Jam.HideResults }} checked {{ end }}> Hide
-                        results
-                    </label>
+                        <input type="checkbox" name="hide_results" {{ if .Jam.HideResults }} checked {{ end }}>
+                            Hide results
+                        </label>
                 </div>
             </div>
 
@@ -96,8 +96,7 @@
                 <div class="control">
                     <label class="checkbox">
                         <input type="checkbox" name="hide_submissions" {{ if .Jam.HideSubmissions }} checked {{ end }}>
-                        Hide
-                        submissions
+                        Hide submissions
                     </label>
                 </div>
             </div>
@@ -137,7 +136,7 @@
                 {{ range .Jam.Criteria }}
                     <div class="field">
                         <div class="control block">
-                            <input class="input" placeholder="Criteria Title" type="text" name="criteria[]" value="{{.Title}}">
+                            <input class="input" placeholder="Criteria Title" type="text" name="criteria_title[]" value="{{.Title}}">
                         </div>
 
                         <div class="control block">
@@ -150,9 +149,41 @@
                         </div>
                     </div>
                 {{ end }}
-                <div id="addCriteriaButton" class="field">
+                <div id="add-criteria-button" class="field">
                     <div class="control">
                         <a class="button is-success" onclick="addCriteria()">Add new criteria</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="block">
+            <label class="label is-medium">Questions for entry</label>
+            <div id="question-container" class="box">
+                {{ range .Jam.Questions }}
+                    <div class="field">
+                        <div class="control block">
+                            <input class="input" placeholder="Question" type="text" name="question_title[]" value="{{.Title}}">
+                        </div>
+
+                        <div class="control block">
+                            <textarea class="textarea" name="question_desc[]" placeholder="Question Description"
+                                      rows="5">{{.Description}}</textarea>
+                        </div>
+
+                        <label class="label">Hide criteria if question is answered (optional)</label>
+                        <div class="control block">
+                            <input class="input" placeholder="Criteria Title" type="text" name="question_criteria[]" value="{{.HiddenCriteria}}">
+                        </div>
+
+                        <div class="control block">
+                            <a class="button is-danger" onclick="removeQuestion()">Remove</a>
+                        </div>
+                    </div>
+                {{ end }}
+                <div id="add-question-button" class="field">
+                    <div class="control">
+                        <a class="button is-success" onclick="addQuestion()">Add new entry question</a>
                     </div>
                 </div>
             </div>
@@ -175,17 +206,16 @@
         }
 
         function addCriteria() {
-            let addCriteriaButton = document.getElementById("addCriteriaButton");
+            let addCriteriaButton = document.getElementById("add-criteria-button");
             let container = document.getElementById("criteria-container");
 
             let fieldHTML = `
             <div class="control block">
-                <input class="input" placeholder="Criteria Title" type="text" name="criteria[]">
+                <input class="input" placeholder="Criteria Title" type="text" name="criteria_title[]">
             </div>
 
             <div class="control block">
-                <textarea class="textarea" name="criteria_desc[]" placeholder="Criteria Description"
-                          rows="5"></textarea>
+                <textarea class="textarea" name="criteria_desc[]" placeholder="Criteria Description" rows="5"></textarea>
             </div>
 
             <div class="control block">
@@ -198,6 +228,42 @@
             fieldDiv.innerHTML = fieldHTML;
 
             container.insertBefore(fieldDiv, addCriteriaButton);
+        }
+
+        function removeQuestion() {
+            let container = document.getElementById("question-container");
+            container.removeChild(this.parentNode.parentNode);
+        }
+
+        function addQuestion() {
+            let addQuestionButton = document.getElementById("add-question-button");
+            let container = document.getElementById("question-container");
+
+            let fieldHTML = `
+            <div class="control block">
+                <input class="input" placeholder="Question" type="text" name="question_title[]">
+            </div>
+
+            <div class="control block">
+                <textarea class="textarea" name="question_desc[]" placeholder="Question Description"
+                          rows="5"></textarea>
+            </div>
+
+            <label class="label">Hide criteria if question is answered (optional)</label>
+            <div class="control block">
+                <input class="input" placeholder="Criteria Title" type="text" name="question_criteria[]">
+            </div>
+
+            <div class="control block">
+                <a class="button is-danger" onclick="removeQuestion()">Remove</a>
+            </div>`;
+
+
+            let fieldDiv = document.createElement("div");
+            fieldDiv.className = "field";
+            fieldDiv.innerHTML = fieldHTML;
+
+            container.insertBefore(fieldDiv, addQuestionButton);
         }
 
         const fileInput = document.querySelector('#file-cover-image input[type=file]');

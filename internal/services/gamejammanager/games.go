@@ -111,6 +111,11 @@ func (jm *gameJamManager) CreateGame(ctx context.Context, jamURL string, user us
 		return "", err
 	}
 
+	for i := range game.Answers {
+		game.Answers[i].GameID = game.ID
+		game.Answers[i].QuestionID = jam.Questions[i].ID
+	}
+
 	err = jm.repo.CreateGame(ctx, game)
 	if err != nil {
 		return "", err
@@ -144,6 +149,12 @@ func (jm *gameJamManager) UpdateGame(ctx context.Context, jamURL string, gameURL
 	if game.ScreenshotURLs != nil {
 		prevGame.ScreenshotURLs = game.ScreenshotURLs
 	}
+
+	for i := range game.Answers {
+		game.Answers[i].GameID = game.ID
+		game.Answers[i].QuestionID = jam.Questions[i].ID
+	}
+	prevGame.Answers = game.Answers
 
 	err = jm.repo.UpdateGame(ctx, *prevGame)
 	return err

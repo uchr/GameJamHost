@@ -11,12 +11,22 @@ import (
 )
 
 func (st *storage) CreateGame(ctx context.Context, game gamejams.Game) error {
-	_, err := st.db.Exec(ctx, "INSERT INTO games (game_jam_id, user_id, title, content, cover_image, screenshot_images, url, build, is_banned) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+	row := st.db.QueryRow(ctx, "INSERT INTO games (game_jam_id, user_id, title, content, cover_image, screenshot_images, url, build, is_banned) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING game_jam_id",
 		game.JamID, game.UserID, game.Title, game.Content, game.CoverImageURL, pq.StringArray(game.ScreenshotURLs), game.URL, game.Build, game.IsBanned)
 
+	err := row.Scan(&game.ID)
 	if err != nil {
 		return err
 	}
+
+	for _, a := range game.Answers {
+		a.GameID = game.ID
+		err = st.createAnswer(ctx, a)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -31,6 +41,12 @@ func (st *storage) GetGame(ctx context.Context, jamID int, gameURL string) (*gam
 		return nil, err
 	}
 
+	answers, err := st.getAnswers(ctx, game.ID)
+	if err != nil {
+		return nil, err
+	}
+	game.Answers = answers
+
 	return &game, nil
 }
 
@@ -40,6 +56,20 @@ func (st *storage) UpdateGame(ctx context.Context, game gamejams.Game) error {
 	if err != nil {
 		return err
 	}
+
+	err = st.deleteAnswers(ctx, game.ID)
+	if err != nil {
+		return err
+	}
+
+	for _, a := range game.Answers {
+		a.GameID = game.ID
+		err = st.createAnswer(ctx, a)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -56,6 +86,13 @@ func (st *storage) GetGames(ctx context.Context, jamID int) ([]gamejams.Game, er
 		if err != nil {
 			return nil, err
 		}
+
+		answers, err := st.getAnswers(ctx, game.ID)
+		if err != nil {
+			return nil, err
+		}
+		game.Answers = answers
+
 		games = append(games, game)
 	}
 
@@ -78,6 +115,13 @@ func (st *storage) GetGamesByUserID(ctx context.Context, userID int) ([]gamejams
 		if err != nil {
 			return nil, err
 		}
+
+		answers, err := st.getAnswers(ctx, game.ID)
+		if err != nil {
+			return nil, err
+		}
+		game.Answers = answers
+
 		games = append(games, game)
 	}
 
@@ -88,7 +132,12 @@ func (st *storage) GetGamesByUserID(ctx context.Context, userID int) ([]gamejams
 }
 
 func (st *storage) DeleteGame(ctx context.Context, gameID int) error {
-	_, err := st.db.Exec(ctx, "DELETE FROM games WHERE game_id = $1", gameID)
+	err := st.deleteAnswers(ctx, gameID)
+	if err != nil {
+		return err
+	}
+
+	_, err = st.db.Exec(ctx, "DELETE FROM games WHERE game_id = $1", gameID)
 	if err != nil {
 		return err
 	}

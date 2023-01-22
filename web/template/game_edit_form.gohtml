@@ -7,12 +7,14 @@
         <p>Submissions for <a href="/jams/{{.Jam.URL}}">{{.Jam.Title}}</a></p>
     {{end}}
 </div>
+{{ if not .IsNewGame }}
 <div class="tabs">
     <ul>
         <li><a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}">Overview</a></li>
         <li class="is-active"><a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit">Edit</a></li>
     </ul>
 </div>
+{{end}}
 <form enctype="multipart/form-data"  action="{{ if .IsNewGame }}/jams/{{.Jam.URL}}/game/new{{else}}/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit{{end}}" method="POST">
     <div class="field">
         <label class="label">Title</label>
@@ -50,28 +52,51 @@
         </div>
     </div>
 
-    <div class="field">
-        <div class="control">
-            {{ if gt (len .Game.ScreenshotURLs) 0 }}
-            <img src="/static/user_images/{{index .Game.ScreenshotURLs 0}}" alt="Screenshot 1" />
-            {{ end }}
-            <label class="label">Screenshot 1</label>
-            <input type="file" name="screenshot_0" />
+    <div class="block">
+        <div class="field">
+            <div class="control">
+                {{ if gt (len .Game.ScreenshotURLs) 0 }}
+                <img src="/static/user_images/{{index .Game.ScreenshotURLs 0}}" alt="Screenshot 1" />
+                {{ end }}
+                <label class="label">Screenshot 1</label>
+                <input type="file" name="screenshot_0" />
+            </div>
         </div>
-        <div class="control">
-            {{ if gt (len .Game.ScreenshotURLs) 1 }}
-            <img src="/static/user_images/{{index .Game.ScreenshotURLs 1}}" alt="Screenshot 2" />
-            {{ end }}
-            <label class="label">Screenshot 2</label>
-            <input type="file" name="screenshot_1" />
+        <div class="field">
+            <div class="control">
+                {{ if gt (len .Game.ScreenshotURLs) 1 }}
+                <img src="/static/user_images/{{index .Game.ScreenshotURLs 1}}" alt="Screenshot 2" />
+                {{ end }}
+                <label class="label">Screenshot 2</label>
+                <input type="file" name="screenshot_1" />
+            </div>
         </div>
-        <div class="control">
-            {{ if gt (len .Game.ScreenshotURLs) 2 }}
-            <img src="/static/user_images/{{index .Game.ScreenshotURLs 2}}" alt="Screenshot 3" />
-            {{ end }}
-            <label class="label">Screenshot 3</label>
-            <input type="file" name="screenshot_2" />
+        <div class="field">
+            <div class="control">
+                {{ if gt (len .Game.ScreenshotURLs) 2 }}
+                <img src="/static/user_images/{{index .Game.ScreenshotURLs 2}}" alt="Screenshot 3" />
+                {{ end }}
+                <label class="label">Screenshot 3</label>
+                <input type="file" name="screenshot_2" />
+            </div>
         </div>
+    </div>
+
+    <div class="box">
+        {{range $i, $question := .Jam.Questions }}
+        <div class="field">
+            <label class="label">{{.Title}}</label>
+            <p>{{.Description}}</p>
+            <div class="control">
+                <div class="select">
+                    <select name="answers[]">
+                        <option value="Yes" {{if (index $.Game.Answers $i).Answer}}selected{{end}}>Yes</option>
+                        <option value="No" {{if not (index $.Game.Answers $i).Answer}}selected{{end}}>No</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        {{end}}
     </div>
 
     <div class="field">
