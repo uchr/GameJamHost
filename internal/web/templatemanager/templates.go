@@ -42,6 +42,9 @@ func NewManager(templateFolder string) (*templateManager, error) {
 	if err := tm.loadTemplate("jam_entries"); err != nil {
 		return nil, err
 	}
+	if err := tm.loadTemplate("jam_results"); err != nil {
+		return nil, err
+	}
 	if err := tm.loadTemplate("game_edit_form"); err != nil {
 		return nil, err
 	}

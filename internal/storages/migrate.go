@@ -3,18 +3,28 @@ package storages
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/tern/migrate"
 
 	"GameJamPlatform/internal/log"
 )
 
-func (st *storage) Migrate(ctx context.Context) error {
+func (st *storage) migrate(ctx context.Context, databasePath string, connectionTimeout time.Duration) error {
 	if !st.cfg.MigrationEnabled {
 		return nil
 	}
 
-	migrator, err := migrate.NewMigrator(ctx, st.db, "version")
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, connectionTimeout)
+	defer cancel()
+
+	conn, err := pgx.Connect(ctxWithTimeout, databasePath)
+	if err != nil {
+		return fmt.Errorf("migrator error: %w", err)
+	}
+
+	migrator, err := migrate.NewMigrator(ctx, conn, "version")
 	if err != nil {
 		return fmt.Errorf("migrator error: %w", err)
 	}

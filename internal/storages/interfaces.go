@@ -35,4 +35,7 @@ type Repo interface {
 	GetSession(ctx context.Context, sessionID string) (*sessions.Session, error)
 	UpdateSession(ctx context.Context, session sessions.Session) error
 	DeleteSession(ctx context.Context, sessionID string) error
+
+	AddVote(ctx context.Context, vote gamejams.Vote) error
+	GetVote(ctx context.Context, criteriaID int) ([]gamejams.Vote, error)
 }

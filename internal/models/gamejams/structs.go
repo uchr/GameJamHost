@@ -50,10 +50,10 @@ type Criteria struct {
 }
 
 type Vote struct {
-	ID          int
-	GameID      int
-	UserID      int
-	CriteriaUID string
+	ID         int
+	GameID     int
+	UserID     int
+	CriteriaID int
 
 	Value int
 }

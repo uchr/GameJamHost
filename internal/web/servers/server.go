@@ -85,7 +85,9 @@ func (s *server) Run() error {
 		r.Get("/users/{username}/edit", s.userEditHandlerGet())
 		r.Post("/users/{username}/edit", s.userEditHandlerPost())
 
-		//r.Get("/jams/{jamURL}/results", s.jamResultsHandler())
+		// Voting
+		r.Post("/jams/{jamURL}/games/{gameURL}/vote", s.gameVoteHandlerPost())
+		r.Get("/jams/{jamURL}/results", s.jamResultsHandler())
 
 		r.Handle("/static/*", http.StripPrefix("/static/", fs))
 	})

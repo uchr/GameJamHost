@@ -50,18 +50,6 @@ CREATE TABLE IF NOT EXISTS games
     unique (game_id)
 );
 
-CREATE TABLE IF NOT EXISTS participants
-(
-    participant_id      INT GENERATED ALWAYS AS IDENTITY,
-    user_id             INT         NOT NULL REFERENCES users (user_id),
-    game_jam_id         INT         NOT NULL REFERENCES game_jams (game_jam_id),
-    team_id             INT,
-    is_looking_for_team bool,
-    tags                text[],
-    is_admin            bool,
-    created_at          timestamptz not null default current_timestamp
-);
-
 CREATE TABLE IF NOT EXISTS sessions
 (
     session_id text NOT NULL,
@@ -108,12 +96,25 @@ CREATE TABLE IF NOT EXISTS game_answers
     unique (answer_id)
 );
 
+CREATE TABLE IF NOT EXISTS votes
+(
+    vote_id int GENERATED ALWAYS AS IDENTITY,
+    game_id INT NOT NULL REFERENCES games (game_id),
+    user_id INT NOT NULL REFERENCES users (user_id),
+    criteria_id int NOT NULL REFERENCES criteria (criteria_id),
+    value int,
+
+    primary key (vote_id),
+    unique (vote_id)
+);
+
 ---- create above / drop below ----
 
 DROP TABLE IF EXISTS game_jams;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS participants;
 DROP TABLE IF EXISTS sessions;
 DROP TABLE IF EXISTS criteria;
 DROP TABLE IF EXISTS jam_questions;
+DROP TABLE IF EXISTS game_answers;
+DROP TABLE IF EXISTS votes;

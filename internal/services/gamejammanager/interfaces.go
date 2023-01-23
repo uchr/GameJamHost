@@ -5,6 +5,7 @@ import (
 
 	"GameJamPlatform/internal/models/gamejams"
 	"GameJamPlatform/internal/models/users"
+	"GameJamPlatform/internal/models/voting"
 )
 
 type GameJamManager interface {
@@ -29,4 +30,8 @@ type GameJamManager interface {
 	GetGamesByUserID(ctx context.Context, userID int) ([]gamejams.Game, error)
 	IsGameOwner(ctx context.Context, game gamejams.Game, user *users.User) (bool, error)
 	IsGameOwnerByURL(ctx context.Context, jamURL string, gameURL string, user *users.User) (bool, error)
+
+	VoteGame(ctx context.Context, vote []gamejams.Vote) error
+	GetGameResult(ctx context.Context, jamURL string, gameURL string) (*voting.GameResult, error)
+	GetJamResult(ctx context.Context, jamURL string) (*voting.JamResult, error)
 }
