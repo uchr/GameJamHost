@@ -32,18 +32,28 @@ func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, error) {
 		HideSubmissions: r.FormValue("hide_submissions") == "on",
 	}
 
-	jam.StartDate, err = time.Parse(defs.TimeLayout, r.FormValue("start_date"))
+	timezoneValue := r.FormValue("timezone")
+	userTimezone, err := time.LoadLocation(timezoneValue)
+	if err != nil {
+		return nil, err
+	}
+
+	jam.StartDate, err = time.ParseInLocation(defs.TimeLayout, r.FormValue("start_date"), userTimezone)
 	if err != nil {
 		vErr.Add("StartDate", "Must be a valid date")
 	}
-	jam.EndDate, err = time.Parse(defs.TimeLayout, r.FormValue("end_date"))
+	jam.EndDate, err = time.ParseInLocation(defs.TimeLayout, r.FormValue("end_date"), userTimezone)
 	if err != nil {
 		vErr.Add("EndDate", "Must be a valid date")
 	}
-	jam.VotingEndDate, err = time.Parse(defs.TimeLayout, r.FormValue("voting_end_date"))
+	jam.VotingEndDate, err = time.ParseInLocation(defs.TimeLayout, r.FormValue("voting_end_date"), userTimezone)
 	if err != nil {
 		vErr.Add("VotingEndDate", "Must be a valid date")
 	}
+
+	jam.StartDate = jam.StartDate.In(time.UTC)
+	jam.EndDate = jam.EndDate.In(time.UTC)
+	jam.VotingEndDate = jam.VotingEndDate.In(time.UTC)
 
 	coverImageURL, err := s.uploadImage(r, "cover_image")
 	if err != nil {

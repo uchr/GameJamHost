@@ -75,3 +75,12 @@ type GameAnswer struct {
 
 	Answer bool
 }
+
+type JamState int
+
+const (
+	JamStateNotStarted JamState = iota
+	JamStateStarted
+	JamStateEnded
+	JamStateVotingEnded
+)

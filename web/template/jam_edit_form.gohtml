@@ -104,6 +104,8 @@
 
         <div class="block">
             <div class="field">
+                <input id="timezone-input" type="hidden" name="timezone">
+
                 <div class="control">
                     <label class="label">Start date</label>
                     {{ with .Errors.StartDate }}
@@ -273,5 +275,8 @@
                 fileName.textContent = fileInput.files[0].name;
             }
         }
+
+        let timezone_input = document.getElementById("timezone-input");
+        timezone_input.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
     </script>
 {{end}}
