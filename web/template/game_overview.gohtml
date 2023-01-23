@@ -1,0 +1,68 @@
+{{define "content"}}
+    <div class="content">
+        <h1 class="title is-1">{{.Game.Title}}</h1>
+        <p>Submissions for <a href="/jams/{{.Jam.URL}}">{{.Jam.Title}}</a></p>
+    </div>
+    {{ if .IsAuth }}
+        {{ if eq .Game.UserID .User.ID }}
+            <div class="tabs">
+                <ul>
+                    <li class="is-active"><a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}">Overview</a></li>
+                    <li><a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit">Edit</a></li>
+                </ul>
+            </div>
+        {{ end }}
+    {{ end }}
+    <div class="content">
+        <div class="has-text-centered">
+            <a href="{{.Game.Build}}" class="button is-link">Download</a>
+        </div>
+
+        {{ if .Game.CoverImageURL }}
+            <img src="/static/user_images/{{.Game.CoverImageURL}}" alt="Cover image"/>
+        {{ end }}
+        {{ if gt (len .Game.ScreenshotURLs) 0 }}
+            <img src="/static/user_images/{{index .Game.ScreenshotURLs 0}}" alt="Screenshot 1"/>
+        {{ end }}
+        {{ if gt (len .Game.ScreenshotURLs) 1 }}
+            <img src="/static/user_images/{{index .Game.ScreenshotURLs 1}}" alt="Screenshot 2"/>
+        {{ end }}
+        {{ if gt (len .Game.ScreenshotURLs) 2 }}
+            <img src="/static/user_images/{{index .Game.ScreenshotURLs 2}}" alt="Screenshot 3"/>
+        {{ end }}
+
+        {{.RenderedContent}}
+
+        {{ if and .IsAuth (eq .Game.UserID .User.ID) }}
+            <div class="box">
+                <h2 class="title is-2">Voting</h2>
+                <form action="/jams/{{.Jam.URL}}/games/{{.Game.URL}}/vote" method="POST">
+                    {{ range .Jam.Criteria }}
+                        <div class="field">
+                            <label class="label">{{.Title}}</label>
+                            <p>{{.Description}}</p>
+                            <div class="control">
+                                <div class="select">
+                                    <select name="vote[]">
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    {{end}}
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-link">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        {{end}}
+    </div>
+
+{{end}}

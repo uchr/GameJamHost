@@ -1,0 +1,42 @@
+{{define "content"}}
+    <div class="content">
+        <h1 class="title is-1">{{.ProfileUser.Username}}</h1>
+
+        {{ if .IsAuth}}
+            {{ if eq .ProfileUser.ID .User.ID }}
+                <a href="/users/{{.ProfileUser.Username}}/edit" class="button is-small is-link">Edit</a>
+            {{ end }}
+        {{ end }}
+
+        <h2>About</h2>
+        {{.RenderedAbout}}
+
+        <h2>Jams</h2>
+        {{ if .Jams}}
+            <ul>
+                {{range .Jams}}
+                    <li>
+                        <a href="/jams/{{.URL}}">{{.Title}}</a>
+                    </li>
+                {{end}}
+            </ul>
+        {{ else }}
+            <p>No jams yet</p>
+        {{ end }}
+
+        <h2>Games</h2>
+        {{ if .Games}}
+            <ul>
+                {{ range .Games }}
+                    <li>
+                        <a href="/jams/{{(index $.JamURLs .JamID)}}/games/{{.URL}}">{{.Title}}</a>
+                    </li>
+                {{ end }}
+            </ul>
+        {{ else }}
+            <p>No games yet</p>
+        {{ end }}
+
+    </div>
+
+{{end}}

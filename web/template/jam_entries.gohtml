@@ -1,0 +1,32 @@
+{{define "content"}}
+    <div class="content">
+        {{ if .Jam.CoverImageURL }}
+            <img src="/static/user_images/{{.Jam.CoverImageURL}}" alt="Cover image"/>
+        {{ end }}
+        <h1 class="title is-1">{{.Jam.Title}}</h1>
+    </div>
+    <div class="tabs">
+        <ul>
+            <li><a href="/jams/{{.Jam.URL}}">Overview</a></li>
+            <li class="is-active"><a href="/jams/{{.Jam.URL}}/entries">Submissions</a></li>
+            {{ if .IsAuth }}
+                {{ if eq .Jam.UserID .User.ID }}
+                    <li><a href="/jams/{{.Jam.ID}}/edit">Edit</a></li>
+                {{ end }}
+            {{ end }}
+        </ul>
+    </div>
+    <div class="content">
+        {{ if .Games}}
+            <ul>
+                {{ range .Games }}
+                    <li>
+                        <a href="/jams/{{$.Jam.URL}}/games/{{.URL}}">{{.Title}}</a>
+                    </li>
+                {{ end }}
+            </ul>
+        {{ else }}
+            <p>No games yet</p>
+        {{ end }}
+    </div>
+{{end}}

@@ -1,0 +1,112 @@
+{{define "content"}}
+<div class="content">
+    {{ if .IsNewGame }}
+        <h1 class="title is-1"> New Game Entry for {{.Jam.Title}} </h1>
+    {{else}}
+        <h1 class="title is-1">{{.Game.Title}}</h1>
+        <p>Submissions for <a href="/jams/{{.Jam.URL}}">{{.Jam.Title}}</a></p>
+    {{end}}
+</div>
+{{ if not .IsNewGame }}
+<div class="tabs">
+    <ul>
+        <li><a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}">Overview</a></li>
+        <li class="is-active"><a href="/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit">Edit</a></li>
+    </ul>
+</div>
+{{end}}
+<form enctype="multipart/form-data"  action="{{ if .IsNewGame }}/jams/{{.Jam.URL}}/game/new{{else}}/jams/{{.Jam.URL}}/games/{{.Game.URL}}/edit{{end}}" method="POST">
+    <div class="field">
+        <label class="label">Title</label>
+        <div class="control">
+            {{ if .Errors.Title }}
+            <p class="help is-danger">{{ .Errors.Title }}</p>
+            {{ end }}
+            <input class="input" id="name"  name="name" type="text" placeholder="Text input" value="{{.Game.Title}}">
+        </div>
+
+        <label class="label">Build</label>
+        <div class="control">
+            {{ if .Errors.Build }}
+            <p class="help is-danger">{{ .Errors.Build }}</p>
+            {{ end }}
+            <input class="input" id="build" name="build" type="text" placeholder="Text input" value="{{.Game.Build}}">
+        </div>
+
+        <label class="label">Content</label>
+        <div class="control">
+            {{ if .Errors.Content }}
+            <p class="help is-danger">{{ .Errors.Content }}</p>
+            {{ end }}
+            <textarea class="textarea" name="content" placeholder="Content" rows="20">{{.Game.Content}}</textarea>
+        </div>
+    </div>
+
+    <div class="field">
+        <div class="control">
+            {{ if .Game.CoverImageURL }}
+            <img src="/static/user_images/{{.Game.CoverImageURL}}" alt="Cover image" />
+            {{ end }}
+            <label class="label">Cover image</label>
+            <input type="file" name="cover_image" />
+        </div>
+    </div>
+
+    <div class="block">
+        <div class="field">
+            <div class="control">
+                {{ if gt (len .Game.ScreenshotURLs) 0 }}
+                <img src="/static/user_images/{{index .Game.ScreenshotURLs 0}}" alt="Screenshot 1" />
+                {{ end }}
+                <label class="label">Screenshot 1</label>
+                <input type="file" name="screenshot_0" />
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                {{ if gt (len .Game.ScreenshotURLs) 1 }}
+                <img src="/static/user_images/{{index .Game.ScreenshotURLs 1}}" alt="Screenshot 2" />
+                {{ end }}
+                <label class="label">Screenshot 2</label>
+                <input type="file" name="screenshot_1" />
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                {{ if gt (len .Game.ScreenshotURLs) 2 }}
+                <img src="/static/user_images/{{index .Game.ScreenshotURLs 2}}" alt="Screenshot 3" />
+                {{ end }}
+                <label class="label">Screenshot 3</label>
+                <input type="file" name="screenshot_2" />
+            </div>
+        </div>
+    </div>
+
+    <div class="box">
+        {{range $i, $question := .Jam.Questions }}
+        <div class="field">
+            <label class="label">{{.Title}}</label>
+            <p>{{.Description}}</p>
+            <div class="control">
+                <div class="select">
+                    <select name="answers[]">
+                        <option value="Yes" {{if (index $.Game.Answers $i).Answer}}selected{{end}}>Yes</option>
+                        <option value="No" {{if not (index $.Game.Answers $i).Answer}}selected{{end}}>No</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    <div class="field">
+        <div class="control">
+            {{ if .IsNewGame }}
+            <button type="submit" class="button is-link">Create</button>
+            {{ else }}
+            <button type="submit" class="button is-link">Save</button>
+            {{ end }}
+        </div>
+    </div>
+</form>
+{{end}}

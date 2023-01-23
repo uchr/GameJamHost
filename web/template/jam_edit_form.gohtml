@@ -1,0 +1,282 @@
+{{define "content"}}
+    <div class="content">
+        {{ if .IsNewJam }}
+            <h1 class="title is-1"> New Game Jam </h1>
+        {{ else }}
+            {{ if .Jam.CoverImageURL }}
+                <img src="/static/user_images/{{.Jam.CoverImageURL}}" alt="Cover image"/>
+            {{ end }}
+            <h1 class="title is-1">{{.Jam.Title}}</h1>
+        {{ end }}
+    </div>
+    {{ if not .IsNewJam }}
+        <div class="tabs">
+            <ul>
+                <li><a href="/jams/{{.Jam.URL}}">Overview</a></li>
+                <li><a href="/jams/{{.Jam.URL}}/entries">Submissions</a></li>
+                {{ if .IsAuth }}
+                    {{ if eq .Jam.UserID .User.ID }}
+                        <li class="is-active"><a href="/jams/{{.Jam.ID}}/edit">Edit</a></li>
+                    {{ end }}
+                {{ end }}
+            </ul>
+        </div>
+    {{ end }}
+    <form enctype="multipart/form-data" action="{{ if .IsNewJam }} /jam/new {{ else }} /jams/{{.Jam.ID}}/edit {{ end }}"
+          method="POST">
+        <div class="block">
+            <div class="field">
+                <label class="label">Title</label>
+                <div class="control">
+                    {{ if .Errors.Title }}
+                        <p class="help is-danger">{{ .Errors.Title }}</p>
+                    {{ end }}
+                    <input class="input" id="name" name="name" type="text" placeholder="Text input"
+                           value="{{.Jam.Title}}">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">URL</label>
+                <div class="control">
+                    {{ with .Errors.URL }}
+                        <p class="help is-danger">{{ . }}</p>
+                    {{ end }}
+                    <input class="input" id="url" name="url" type="text" placeholder="Text input" value="{{.Jam.URL}}">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">Content</label>
+                <div class="control">
+                    {{ with .Errors.Content }}
+                        <p class="help is-danger">{{ . }}</p>
+                    {{ end }}
+                    <textarea class="textarea" name="content" placeholder="Content"
+                              rows="20">{{.Jam.Content}}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="block">
+            {{ if .Jam.CoverImageURL }}
+                <img src="/static/user_images/{{.Jam.CoverImageURL}}" alt="Cover image"/>
+            {{ end }}
+            <div class="field">
+                <div id="file-cover-image" class="file has-name">
+                    <label class="file-label">
+                        <input class="file-input" type="file" name="cover_image">
+                        <span class="file-cta">
+                            <span class="file-icon">
+                                <i class="fas fa-upload"></i>
+                            </span>
+                            <span class="file-label">
+                                Cover image…
+                            </span>
+                        </span>
+                        <span class="file-name">
+                            No file uploaded
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="block">
+            <div class="field">
+                <div class="control">
+                    <label class="checkbox">
+                        <input type="checkbox" name="hide_results" {{ if .Jam.HideResults }} checked {{ end }}>
+                            Hide results
+                        </label>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <label class="checkbox">
+                        <input type="checkbox" name="hide_submissions" {{ if .Jam.HideSubmissions }} checked {{ end }}>
+                        Hide submissions
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="block">
+            <div class="field">
+                <input id="timezone-input" type="hidden" name="timezone">
+
+                <div class="control">
+                    <label class="label">Start date</label>
+                    {{ with .Errors.StartDate }}
+                        <p class="help is-danger">{{ . }}</p>
+                    {{ end }}
+                    <input class="input" name="start_date" type="datetime-local" value="{{.StartDate}}"/>
+                </div>
+
+                <div class="control">
+                    <label class="label">End date</label>
+                    {{ with .Errors.EndDate }}
+                        <p class="help is-danger">{{ . }}</p>
+                    {{ end }}
+                    <input class="input" name="end_date" type="datetime-local" value="{{.EndDate}}"/>
+                </div>
+
+                <div class="control">
+                    <label class="label">Voting end date</label>
+                    {{ with .Errors.VotingEndDate }}
+                        <p class="help is-danger">{{ . }}</p>
+                    {{ end }}
+                    <input class="input" name="voting_end_date" type="datetime-local" value="{{.VotingEndDate}}"/>
+                </div>
+            </div>
+        </div>
+
+        <div class="block">
+            <label class="label is-medium">Criteria</label>
+            <div id="criteria-container" class="box">
+                {{ range .Jam.Criteria }}
+                    <div class="field">
+                        <div class="control block">
+                            <input class="input" placeholder="Criteria Title" type="text" name="criteria_title[]" value="{{.Title}}">
+                        </div>
+
+                        <div class="control block">
+                            <textarea class="textarea" name="criteria_desc[]" placeholder="Criteria Description"
+                                      rows="5">{{.Description}}</textarea>
+                        </div>
+
+                        <div class="control block">
+                            <a class="button is-danger" onclick="removeCriteria()">Remove</a>
+                        </div>
+                    </div>
+                {{ end }}
+                <div id="add-criteria-button" class="field">
+                    <div class="control">
+                        <a class="button is-success" onclick="addCriteria()">Add new criteria</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="block">
+            <label class="label is-medium">Questions for entry</label>
+            <div id="question-container" class="box">
+                {{ range .Jam.Questions }}
+                    <div class="field">
+                        <div class="control block">
+                            <input class="input" placeholder="Question" type="text" name="question_title[]" value="{{.Title}}">
+                        </div>
+
+                        <div class="control block">
+                            <textarea class="textarea" name="question_desc[]" placeholder="Question Description"
+                                      rows="5">{{.Description}}</textarea>
+                        </div>
+
+                        <label class="label">Hide criteria if question is answered (optional)</label>
+                        <div class="control block">
+                            <input class="input" placeholder="Criteria Title" type="text" name="question_criteria[]" value="{{.HiddenCriteria}}">
+                        </div>
+
+                        <div class="control block">
+                            <a class="button is-danger" onclick="removeQuestion()">Remove</a>
+                        </div>
+                    </div>
+                {{ end }}
+                <div id="add-question-button" class="field">
+                    <div class="control">
+                        <a class="button is-success" onclick="addQuestion()">Add new entry question</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="field has-text-centered">
+            <div class="control">
+                {{ if .IsNewJam }}
+                    <button type="submit" class="button is-link">Create</button>
+                {{ else }}
+                    <button type="submit" class="button is-link">Save</button>
+                {{ end }}
+            </div>
+        </div>
+    </form>
+    <script>
+        function removeCriteria() {
+            let container = document.getElementById("criteria-container");
+            container.removeChild(this.parentNode.parentNode);
+        }
+
+        function addCriteria() {
+            let addCriteriaButton = document.getElementById("add-criteria-button");
+            let container = document.getElementById("criteria-container");
+
+            let fieldHTML = `
+            <div class="control block">
+                <input class="input" placeholder="Criteria Title" type="text" name="criteria_title[]">
+            </div>
+
+            <div class="control block">
+                <textarea class="textarea" name="criteria_desc[]" placeholder="Criteria Description" rows="5"></textarea>
+            </div>
+
+            <div class="control block">
+                <a class="button is-danger" onclick="removeCriteria()">Remove</a>
+            </div>`;
+
+
+            let fieldDiv = document.createElement("div");
+            fieldDiv.className = "field";
+            fieldDiv.innerHTML = fieldHTML;
+
+            container.insertBefore(fieldDiv, addCriteriaButton);
+        }
+
+        function removeQuestion() {
+            let container = document.getElementById("question-container");
+            container.removeChild(this.parentNode.parentNode);
+        }
+
+        function addQuestion() {
+            let addQuestionButton = document.getElementById("add-question-button");
+            let container = document.getElementById("question-container");
+
+            let fieldHTML = `
+            <div class="control block">
+                <input class="input" placeholder="Question" type="text" name="question_title[]">
+            </div>
+
+            <div class="control block">
+                <textarea class="textarea" name="question_desc[]" placeholder="Question Description"
+                          rows="5"></textarea>
+            </div>
+
+            <label class="label">Hide criteria if question is answered (optional)</label>
+            <div class="control block">
+                <input class="input" placeholder="Criteria Title" type="text" name="question_criteria[]">
+            </div>
+
+            <div class="control block">
+                <a class="button is-danger" onclick="removeQuestion()">Remove</a>
+            </div>`;
+
+
+            let fieldDiv = document.createElement("div");
+            fieldDiv.className = "field";
+            fieldDiv.innerHTML = fieldHTML;
+
+            container.insertBefore(fieldDiv, addQuestionButton);
+        }
+
+        const fileInput = document.querySelector('#file-cover-image input[type=file]');
+        fileInput.onchange = () => {
+            if (fileInput.files.length > 0) {
+                const fileName = document.querySelector('#file-cover-image .file-name');
+                fileName.textContent = fileInput.files[0].name;
+            }
+        }
+
+        let timezone_input = document.getElementById("timezone-input");
+        timezone_input.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    </script>
+{{end}}

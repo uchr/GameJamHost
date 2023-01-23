@@ -1,0 +1,70 @@
+{{define "content"}}
+    <div class="content">
+        {{ if .Jam.CoverImageURL }}
+            <img src="/static/user_images/{{.Jam.CoverImageURL}}" alt="Cover image"/>
+        {{ end }}
+        <h1 class="title is-1">{{.Jam.Title}}</h1>
+    </div>
+    <div class="tabs">
+        <ul>
+            <li class="is-active"><a href="/jams/{{.Jam.URL}}">Overview</a></li>
+            <li><a href="/jams/{{.Jam.URL}}/entries">Submissions</a></li>
+            {{ if .IsAuth }}
+                {{ if eq .Jam.UserID .User.ID }}
+                    <li><a href="/jams/{{.Jam.ID}}/edit">Edit</a></li>
+                {{ end }}
+            {{ end }}
+        </ul>
+    </div>
+
+    <div class="content">
+        {{ if eq .State "JamStateNotStarted" }}
+            <h2 class="has-text-centered">Starts in <span id="timer"></span></h2>
+        {{ else if eq .State "JamStateStarted" }}
+            <h2 class="has-text-centered">Ends in <span id="timer"></span></h2>
+            <div class="has-text-centered">
+                <a href="/jams/{{.Jam.URL}}/game/new" class="button is-link">Submit</a>
+            </div>
+        {{ else if eq .State "JamStateEnded" }}
+            <h2 class="has-text-centered">Voting ends in <span id="timer"></span></h2>
+            <div class="has-text-centered">
+                <a href="/jams/{{.Jam.URL}}/entries" class="button is-link">Rate</a>
+            </div>
+        {{ else if eq .State "JamStateVotingEnded" }}
+            <h2 class="has-text-centered">Jam ended</h2>
+            <div class="has-text-centered">
+                <a href="/jams/{{.Jam.URL}}/entries" class="button is-link">Games</a>
+            </div>
+        {{ end }}
+
+
+        {{.RenderedContent}}
+    </div>
+
+
+    <script>
+        function UpdateTimer() {
+            let now = new Date().getTime();
+            let distance = countDownDate - now;
+
+            let days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("timer").innerHTML = days + "d " + hours + "h "
+                + minutes + "m " + seconds + "s ";
+
+            if (distance < 0) {
+                clearInterval(x);
+                document.getElementById("timer").innerHTML = "EXPIRED";
+            }
+        }
+
+        {{ if not (eq .State "JamStateVotingEnded")}}
+        let countDownDate = new Date({{.ClosestDate}}).getTime();
+        let x = setInterval(UpdateTimer, 1000);
+        {{end}}
+    </script>
+
+{{end}}
