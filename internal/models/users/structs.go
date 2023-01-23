@@ -10,16 +10,3 @@ type User struct {
 	AvatarURL string
 	About     string
 }
-
-type Participant struct {
-	ID int
-
-	UserID    int
-	GameJamID int
-	TeamID    int
-
-	IsLookingForTeam bool
-	Tags             []string
-
-	IsAdmin bool
-}

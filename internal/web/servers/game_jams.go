@@ -32,18 +32,28 @@ func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, error) {
 		HideSubmissions: r.FormValue("hide_submissions") == "on",
 	}
 
-	jam.StartDate, err = time.Parse(defs.TimeLayout, r.FormValue("start_date"))
+	timezoneValue := r.FormValue("timezone")
+	userTimezone, err := time.LoadLocation(timezoneValue)
+	if err != nil {
+		return nil, err
+	}
+
+	jam.StartDate, err = time.ParseInLocation(defs.TimeLayout, r.FormValue("start_date"), userTimezone)
 	if err != nil {
 		vErr.Add("StartDate", "Must be a valid date")
 	}
-	jam.EndDate, err = time.Parse(defs.TimeLayout, r.FormValue("end_date"))
+	jam.EndDate, err = time.ParseInLocation(defs.TimeLayout, r.FormValue("end_date"), userTimezone)
 	if err != nil {
 		vErr.Add("EndDate", "Must be a valid date")
 	}
-	jam.VotingEndDate, err = time.Parse(defs.TimeLayout, r.FormValue("voting_end_date"))
+	jam.VotingEndDate, err = time.ParseInLocation(defs.TimeLayout, r.FormValue("voting_end_date"), userTimezone)
 	if err != nil {
 		vErr.Add("VotingEndDate", "Must be a valid date")
 	}
+
+	jam.StartDate = jam.StartDate.In(time.UTC)
+	jam.EndDate = jam.EndDate.In(time.UTC)
+	jam.VotingEndDate = jam.VotingEndDate.In(time.UTC)
 
 	coverImageURL, err := s.uploadImage(r, "cover_image")
 	if err != nil {
@@ -53,8 +63,34 @@ func (s *server) parseJamForm(r *http.Request) (*gamejams.GameJam, error) {
 		jam.CoverImageURL = coverImageURL
 	}
 
+	criteriaTitleValues := r.Form["criteria_title[]"]
+	criteriaDescValues := r.Form["criteria_desc[]"]
+	if len(criteriaTitleValues) != len(criteriaDescValues) {
+		return nil, errors.New("criteria and criteria_desc must be the same length")
+	}
+	for i := range criteriaTitleValues {
+		jam.Criteria = append(jam.Criteria, gamejams.Criteria{
+			Title:       criteriaTitleValues[i],
+			Description: criteriaDescValues[i]},
+		)
+	}
+
+	questionTitleValues := r.Form["question_title[]"]
+	questionDescValues := r.Form["question_desc[]"]
+	questionCriteriaValues := r.Form["question_criteria[]"]
+	if len(questionTitleValues) != len(questionDescValues) || len(questionTitleValues) != len(questionCriteriaValues) {
+		return nil, errors.New("question_title, question_desc, and question_criteria must be the same length")
+	}
+	for i := range questionTitleValues {
+		jam.Questions = append(jam.Questions, gamejams.JamQuestion{
+			Title:          questionTitleValues[i],
+			Description:    questionDescValues[i],
+			HiddenCriteria: questionCriteriaValues[i]},
+		)
+	}
+
 	if vErr.HasErrors() {
-		return nil, vErr
+		return &jam, vErr
 	}
 
 	return &jam, nil

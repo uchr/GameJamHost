@@ -29,17 +29,34 @@ type JamOverviewPageData struct {
 	// UserGameURL string TODO: Hide submit button if user has already submitted a game
 	Jam gamejams.GameJam
 
+	State       string
+	ClosestDate string
+
 	RenderedContent template.HTML
 }
 
 func NewJamOverviewPageData(users *users.User, jam gamejams.GameJam) JamOverviewPageData {
-	return JamOverviewPageData{
+	pageData := JamOverviewPageData{
 		AuthPageData: NewAuthPageData(users),
 
 		Jam: jam,
 
 		RenderedContent: renderContent(jam.Content),
 	}
+
+	state, closestDate := jam.GetState()
+	pageData.ClosestDate = closestDate.Format(defs.TimeLayout)
+	if state == gamejams.JamStateNotStarted {
+		pageData.State = "JamStateNotStarted"
+	} else if state == gamejams.JamStateStarted {
+		pageData.State = "JamStateStarted"
+	} else if state == gamejams.JamStateEnded {
+		pageData.State = "JamStateEnded"
+	} else if state == gamejams.JamStateVotingEnded {
+		pageData.State = "JamStateVotingEnded"
+	}
+
+	return pageData
 }
 
 type JamEditFormPageData struct {
@@ -47,21 +64,24 @@ type JamEditFormPageData struct {
 
 	IsNewJam bool
 
-	Jam    gamejams.GameJam
-	Errors map[string]string
+	Jam gamejams.GameJam
 
 	StartDate     string
 	EndDate       string
 	VotingEndDate string
+
+	Errors map[string]string
 }
 
 func NewJamEditFormPageData(user users.User, jam gamejams.GameJam, isNewJam bool, vErr *validationerr.ValidationErrors) JamEditFormPageData {
 	pageData := JamEditFormPageData{
 		AuthPageData: NewAuthPageData(&user),
 
+		Jam: jam,
+
 		IsNewJam: isNewJam,
-		Jam:      jam,
-		Errors:   vErr.Errors(),
+
+		Errors: vErr.Errors(),
 	}
 
 	if !jam.StartDate.IsZero() {

@@ -24,7 +24,7 @@ func (s *server) isAuthorized(r *http.Request) (*sessions.Session, error) {
 		return nil, nil
 	}
 
-	session, err := s.sessionProvider.CheckAndUpdate(r.Context(), token.(string))
+	session, err := s.sessionProvider.Check(r.Context(), token.(string))
 	if err != nil {
 		if errors.Is(err, sessionprovider.ErrSessionNotAuthenticated) {
 			return nil, nil

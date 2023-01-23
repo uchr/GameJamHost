@@ -12,8 +12,8 @@ type Repo interface {
 	CreateJam(ctx context.Context, jam gamejams.GameJam) error
 	UpdateJam(ctx context.Context, jam gamejams.GameJam) error
 	DeleteJam(ctx context.Context, jamID int) error
-	GetJamID(ctx context.Context, jamURL string) (int, error)
-	GetJam(ctx context.Context, jamID int) (*gamejams.GameJam, error)
+	GetJamByURL(ctx context.Context, jamURL string) (*gamejams.GameJam, error)
+	GetJamByID(ctx context.Context, jamID int) (*gamejams.GameJam, error)
 	GetJams(ctx context.Context) ([]gamejams.GameJam, error)
 	GetJamsByUserID(ctx context.Context, userID int) ([]gamejams.GameJam, error)
 
@@ -35,4 +35,7 @@ type Repo interface {
 	GetSession(ctx context.Context, sessionID string) (*sessions.Session, error)
 	UpdateSession(ctx context.Context, session sessions.Session) error
 	DeleteSession(ctx context.Context, sessionID string) error
+
+	AddVote(ctx context.Context, vote gamejams.Vote) error
+	GetVote(ctx context.Context, criteriaID int) ([]gamejams.Vote, error)
 }

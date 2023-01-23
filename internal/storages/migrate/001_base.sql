@@ -50,23 +50,62 @@ CREATE TABLE IF NOT EXISTS games
     unique (game_id)
 );
 
-CREATE TABLE IF NOT EXISTS participants
-(
-    participant_id      INT GENERATED ALWAYS AS IDENTITY,
-    user_id             INT         NOT NULL REFERENCES users (user_id),
-    game_jam_id         INT         NOT NULL REFERENCES game_jams (game_jam_id),
-    team_id             INT,
-    is_looking_for_team bool,
-    tags                text[],
-    is_admin            bool,
-    created_at          timestamptz not null default current_timestamp
-);
-
 CREATE TABLE IF NOT EXISTS sessions
 (
-    session_id text PRIMARY KEY,
+    session_id text NOT NULL,
     user_id    INT NOT NULL REFERENCES users (user_id),
-    expire_at  timestamptz
+    expire_at  timestamptz,
+
+    primary key (session_id),
+    unique (session_id)
+);
+
+CREATE TABLE IF NOT EXISTS criteria
+(
+    criteria_id int GENERATED ALWAYS AS IDENTITY,
+    jam_id INT NOT NULL REFERENCES game_jams (game_jam_id),
+    title       text,
+    description text,
+    created_at  timestamptz not null default current_timestamp,
+
+    primary key (criteria_id),
+    unique (criteria_id)
+);
+
+CREATE TABLE IF NOT EXISTS jam_questions
+(
+    question_id int GENERATED ALWAYS AS IDENTITY,
+    jam_id INT NOT NULL REFERENCES game_jams (game_jam_id),
+    title       text,
+    description text,
+    hidden_criteria text,
+    created_at  timestamptz not null default current_timestamp,
+
+    primary key (question_id),
+    unique (question_id)
+);
+
+CREATE TABLE IF NOT EXISTS game_answers
+(
+    answer_id int GENERATED ALWAYS AS IDENTITY,
+    game_id INT NOT NULL REFERENCES games (game_id),
+    question_id int NOT NULL REFERENCES jam_questions (question_id),
+    answer bool,
+
+    primary key (answer_id),
+    unique (answer_id)
+);
+
+CREATE TABLE IF NOT EXISTS votes
+(
+    vote_id int GENERATED ALWAYS AS IDENTITY,
+    game_id INT NOT NULL REFERENCES games (game_id),
+    user_id INT NOT NULL REFERENCES users (user_id),
+    criteria_id int NOT NULL REFERENCES criteria (criteria_id),
+    value int,
+
+    primary key (vote_id),
+    unique (vote_id)
 );
 
 ---- create above / drop below ----
@@ -74,6 +113,8 @@ CREATE TABLE IF NOT EXISTS sessions
 DROP TABLE IF EXISTS game_jams;
 DROP TABLE IF EXISTS games;
 DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS participants;
 DROP TABLE IF EXISTS sessions;
-
+DROP TABLE IF EXISTS criteria;
+DROP TABLE IF EXISTS jam_questions;
+DROP TABLE IF EXISTS game_answers;
+DROP TABLE IF EXISTS votes;

@@ -98,17 +98,22 @@ func (jm *gameJamManager) CreateGame(ctx context.Context, jamURL string, user us
 		return "", err
 	}
 
-	jamID, err := jm.repo.GetJamID(ctx, jamURL)
+	jam, err := jm.repo.GetJamByURL(ctx, jamURL)
 	if err != nil {
 		return "", err
 	}
 
 	game.Title = strings.TrimSpace(game.Title)
-	game.JamID = jamID
-	game.URL, err = jm.generateGameUrl(ctx, jamID, game.Title)
+	game.JamID = jam.ID
+	game.URL, err = jm.generateGameUrl(ctx, jam.ID, game.Title)
 	game.UserID = user.ID
 	if err != nil {
 		return "", err
+	}
+
+	for i := range game.Answers {
+		game.Answers[i].GameID = game.ID
+		game.Answers[i].QuestionID = jam.Questions[i].ID
 	}
 
 	err = jm.repo.CreateGame(ctx, game)
@@ -125,12 +130,12 @@ func (jm *gameJamManager) UpdateGame(ctx context.Context, jamURL string, gameURL
 		return err
 	}
 
-	jamID, err := jm.repo.GetJamID(ctx, jamURL)
+	jam, err := jm.repo.GetJamByURL(ctx, jamURL)
 	if err != nil {
 		return err
 	}
 
-	prevGame, err := jm.repo.GetGame(ctx, jamID, gameURL)
+	prevGame, err := jm.repo.GetGame(ctx, jam.ID, gameURL)
 	if err != nil {
 		return err
 	}
@@ -145,27 +150,33 @@ func (jm *gameJamManager) UpdateGame(ctx context.Context, jamURL string, gameURL
 		prevGame.ScreenshotURLs = game.ScreenshotURLs
 	}
 
+	for i := range game.Answers {
+		game.Answers[i].GameID = game.ID
+		game.Answers[i].QuestionID = jam.Questions[i].ID
+	}
+	prevGame.Answers = game.Answers
+
 	err = jm.repo.UpdateGame(ctx, *prevGame)
 	return err
 }
 
 func (jm *gameJamManager) BanGame(ctx context.Context, jamURL string, gameURL string) error {
-	jamID, err := jm.repo.GetJamID(ctx, jamURL)
+	jam, err := jm.repo.GetJamByURL(ctx, jamURL)
 	if err != nil {
 		return err
 	}
 
-	err = jm.repo.BanGame(ctx, jamID, gameURL)
+	err = jm.repo.BanGame(ctx, jam.ID, gameURL)
 	return err
 }
 
 func (jm *gameJamManager) GetGame(ctx context.Context, jamURL string, gameURL string) (*gamejams.Game, error) {
-	jamID, err := jm.repo.GetJamID(ctx, jamURL)
+	jam, err := jm.repo.GetJamByURL(ctx, jamURL)
 	if err != nil {
 		return nil, err
 	}
 
-	game, err := jm.repo.GetGame(ctx, jamID, gameURL)
+	game, err := jm.repo.GetGame(ctx, jam.ID, gameURL)
 	if err != nil {
 		return nil, err
 	}
@@ -173,12 +184,12 @@ func (jm *gameJamManager) GetGame(ctx context.Context, jamURL string, gameURL st
 }
 
 func (jm *gameJamManager) GetGames(ctx context.Context, jamURL string) ([]gamejams.Game, error) {
-	jamID, err := jm.repo.GetJamID(ctx, jamURL)
+	jam, err := jm.repo.GetJamByURL(ctx, jamURL)
 	if err != nil {
 		return nil, err
 	}
 
-	games, err := jm.repo.GetGames(ctx, jamID)
+	games, err := jm.repo.GetGames(ctx, jam.ID)
 	return games, err
 }
 
@@ -200,12 +211,12 @@ func (jm *gameJamManager) IsGameOwnerByURL(ctx context.Context, jamURL string, g
 		return false, nil
 	}
 
-	jamID, err := jm.repo.GetJamID(ctx, jamURL)
+	jam, err := jm.repo.GetJamByURL(ctx, jamURL)
 	if err != nil {
 		return false, err
 	}
 
-	game, err := jm.repo.GetGame(ctx, jamID, gameURL)
+	game, err := jm.repo.GetGame(ctx, jam.ID, gameURL)
 	if err != nil {
 		return false, err
 	}

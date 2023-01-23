@@ -35,8 +35,8 @@ func (jm *gameJamManager) validateJam(ctx context.Context, jam gamejams.GameJam)
 
 	// TODO: Validate dates
 
-	prevGameJam, err := jm.repo.GetJamID(ctx, jam.URL)
-	if err == nil && prevGameJam != jam.ID {
+	anotherJam, err := jm.repo.GetJamByURL(ctx, jam.URL)
+	if err == nil && anotherJam.ID != jam.ID {
 		vErr.Add("URL", "URL already exists")
 	}
 
@@ -66,7 +66,11 @@ func (jm *gameJamManager) CreateJam(ctx context.Context, user users.User, jam ga
 
 	jam.UserID = user.ID
 	err = jm.repo.CreateJam(ctx, jam)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (jm *gameJamManager) DeleteJam(ctx context.Context, jamID int) error {
@@ -75,17 +79,16 @@ func (jm *gameJamManager) DeleteJam(ctx context.Context, jamID int) error {
 }
 
 func (jm *gameJamManager) GetJamByURL(ctx context.Context, jamURL string) (*gamejams.GameJam, error) {
-	jamID, err := jm.repo.GetJamID(ctx, jamURL)
+	jam, err := jm.repo.GetJamByURL(ctx, jamURL)
 	if err != nil {
 		return nil, err
 	}
 
-	jam, err := jm.repo.GetJam(ctx, jamID)
 	return jam, err
 }
 
 func (jm *gameJamManager) GetJamByID(ctx context.Context, jamID int) (*gamejams.GameJam, error) {
-	jam, err := jm.repo.GetJam(ctx, jamID)
+	jam, err := jm.repo.GetJamByID(ctx, jamID)
 	return jam, err
 }
 
@@ -99,16 +102,15 @@ func (jm *gameJamManager) UpdateJam(ctx context.Context, jamID int, jam gamejams
 	}
 
 	err = jm.repo.UpdateJam(ctx, jam)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (jm *gameJamManager) JamEntries(ctx context.Context, jamURL string) ([]gamejams.Game, error) {
-	jamID, err := jm.repo.GetJamID(ctx, jamURL)
-	if err != nil {
-		return nil, err
-	}
-
-	jam, err := jm.repo.GetJam(ctx, jamID)
+	jam, err := jm.repo.GetJamByURL(ctx, jamURL)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +132,7 @@ func (jm *gameJamManager) IsHostByID(ctx context.Context, jamID int, user *users
 		return false, nil
 	}
 
-	jam, err := jm.repo.GetJam(ctx, jamID)
+	jam, err := jm.repo.GetJamByID(ctx, jamID)
 	if err != nil {
 		return false, err
 	}

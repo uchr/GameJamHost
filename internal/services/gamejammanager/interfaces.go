@@ -5,16 +5,17 @@ import (
 
 	"GameJamPlatform/internal/models/gamejams"
 	"GameJamPlatform/internal/models/users"
+	"GameJamPlatform/internal/models/voting"
 )
 
 type GameJamManager interface {
 	GetJams(ctx context.Context) ([]gamejams.GameJam, error)
 	GetJamsByUserID(ctx context.Context, userID int) ([]gamejams.GameJam, error)
-	CreateJam(ctx context.Context, user users.User, jam gamejams.GameJam) error
-	DeleteJam(ctx context.Context, jamID int) error
 	GetJamByURL(ctx context.Context, jamURL string) (*gamejams.GameJam, error)
 	GetJamByID(ctx context.Context, jamID int) (*gamejams.GameJam, error)
+	CreateJam(ctx context.Context, user users.User, jam gamejams.GameJam) error
 	UpdateJam(ctx context.Context, jamID int, jam gamejams.GameJam) error
+	DeleteJam(ctx context.Context, jamID int) error
 	JamEntries(ctx context.Context, jamURL string) ([]gamejams.Game, error)
 	// GetUserGame(ctx context.Context, user users.User, jamURL string) (gamejams.Game, error) // TODO: Implement for Jam Overview page
 	IsHost(ctx context.Context, jam gamejams.GameJam, user *users.User) (bool, error)
@@ -29,4 +30,8 @@ type GameJamManager interface {
 	GetGamesByUserID(ctx context.Context, userID int) ([]gamejams.Game, error)
 	IsGameOwner(ctx context.Context, game gamejams.Game, user *users.User) (bool, error)
 	IsGameOwnerByURL(ctx context.Context, jamURL string, gameURL string, user *users.User) (bool, error)
+
+	VoteGame(ctx context.Context, vote []gamejams.Vote) error
+	GetGameResult(ctx context.Context, jamURL string, gameURL string) (*voting.GameResult, error)
+	GetJamResult(ctx context.Context, jamURL string) (*voting.JamResult, error)
 }

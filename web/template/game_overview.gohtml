@@ -32,6 +32,37 @@
         {{ end }}
 
         {{.RenderedContent}}
+
+        {{ if and .IsAuth (eq .Game.UserID .User.ID) }}
+            <div class="box">
+                <h2 class="title is-2">Voting</h2>
+                <form action="/jams/{{.Jam.URL}}/games/{{.Game.URL}}/vote" method="POST">
+                    {{ range .Jam.Criteria }}
+                        <div class="field">
+                            <label class="label">{{.Title}}</label>
+                            <p>{{.Description}}</p>
+                            <div class="control">
+                                <div class="select">
+                                    <select name="vote[]">
+                                        <option value="0">0</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    {{end}}
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-link">Submit</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        {{end}}
     </div>
 
 {{end}}

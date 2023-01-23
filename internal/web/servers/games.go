@@ -44,6 +44,11 @@ func (s *server) parseGameForm(r *http.Request) (*gamejams.Game, error) {
 		}
 	}
 
+	answerValues := r.Form["answers[]"]
+	for _, a := range answerValues {
+		game.Answers = append(game.Answers, gamejams.GameAnswer{Answer: a == "Yes"})
+	}
+
 	return &game, nil
 }
 
